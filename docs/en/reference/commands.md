@@ -8,11 +8,12 @@
 | Local REPL | `unionid cli --db <db>` |
 | Start server | `unionid server --db <db> --addr 127.0.0.1:7878` |
 | Connect client | `unionid cli --addr 127.0.0.1:7878` |
-| Format check | `unionid fmt --check <file>` |
+| Format check | `unionid fmt --check --file <file>` |
 | Check schema | `unionid schema check --file schema.unid` |
 | Print schema | `unionid schema print --db <db>` |
 | Draft migration | `unionid migration diff --db <db> --schema schema.unid --name <name>` |
-| Plan/apply | `unionid migration plan/apply --db <db> --dir migrations` |
+| Plan migration | `unionid migration plan --db <db> --dir migrations` |
+| Apply migration | `unionid migration apply --db <db> --dir migrations` |
 | Integrity check | `unionid check --db <db>` |
 | Safe diagnosis | `unionid doctor --db <db> --format json` |
 | Backup/restore | `unionid backup ...` / `unionid restore ...` |

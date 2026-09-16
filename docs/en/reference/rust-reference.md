@@ -46,7 +46,7 @@ Missing/extra parameters, unknown variants, overflow, and constraint mismatch ar
 
 `fetch_by_key` / `typed_fetch_by_key` perform complete typed-key reads. `PageSpec` cursors require the same query, parameters, order, and size on continuation; any successful mutation makes old cursors fail as stale.
 
-`execute_idempotent_with_params` accepts a separate idempotency key. Equal key/canonical digest replays the original success, a different digest conflicts, and a failure does not occupy the key. A persistent Engine stores effect and complete success receipt in one transaction. `request_id` correlates one attempt and cannot replace the idempotency key.
+`execute_idempotent_with_params` accepts a separate idempotency key. Equal key/canonical digest replays the original success and a different digest conflicts. Only a failure known to occur before transaction commit is guaranteed not to occupy the key; after an uncertain commit, the key and receipt may already be durable. A persistent Engine stores effect and complete success receipt in one transaction. `request_id` correlates one attempt and cannot replace the idempotency key.
 
 ## Concurrent services
 
@@ -64,7 +64,7 @@ For cancellable streams, register the read, send and flush the server-issued cap
 
 ## Transport-neutral protocol
 
-`protocol::Request` / `Response` are the versioned data model used by TCP and HTTP adapters. `Request::with_serde_param` creates a typed wire value; `Response::typed_rows` / `typed_page` recover application values losslessly. Select protocol v2 only when values require its production-scalar envelopes.
+`protocol::Request` / `Response` are the transport-neutral versioned data model used by TCP and HTTP adapters. `Request::with_serde_param` creates a typed wire value; `Response::typed_rows` / `typed_page` recover application values losslessly. Select protocol v2 only when a value requires its production-scalar envelope and both sides support v2.
 
 ## Generated contracts
 

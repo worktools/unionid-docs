@@ -25,7 +25,7 @@ unionid migration diff --db app.redb \
 unionid migration plan --db app.redb --dir migrations
 ```
 
-diff 可生成安全的 add/drop/default/key/index 操作；疑似 rename、required 回填、类型转换和重排会留下非法 `todo`，必须人工补全后才能 plan/apply。
+diff 可直接生成确定性的 add/default/key/index 操作，也会为 type、table、field、variant 和 index 的删除生成带 destructive 标记的 drop。数据对象的 drop 明确丢弃现有数据，不能理解为“安全”，必须人工评审影响后再 plan/apply；疑似 rename、required 回填、类型或 payload 转换和重排会留下非法 `todo`，必须补成显式 rename、`using old -> ...` 转换或其他操作。
 
 ## 应用与恢复
 

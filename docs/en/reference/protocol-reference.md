@@ -34,7 +34,7 @@ i64, IDs, and finite f64 values are strings so JSON number precision cannot alte
 {"type":"int","value":"-9223372036854775808"}
 {"type":"option","value":null}
 {"type":"list","items":[]}
-{"type":"variant","name":"Running","variant_id":"17","args":[]}
+{"type":"variant","name":"Pending","variant_id":"16","args":[]}
 {"type":"named","type_id":"9","value":{"type":"variant","name":"Pending","variant_id":"16","args":[]}}
 ```
 
@@ -48,7 +48,7 @@ A complete TCP response is capped at 16 MiB and introspection at 1 MiB. A bounde
 
 ## Idempotent mutations
 
-The canonical digest covers version, exact query UTF-8, sorted typed parameters, and schema precondition. It excludes request ID, the key itself, and deadline. Equal key/digest replays the complete successful response with `replayed: true`; equal key with a different digest returns `E_IDEMPOTENCY_CONFLICT`. A normal failure does not occupy the key.
+The canonical digest covers version, exact query UTF-8, sorted typed parameters, and schema precondition. It excludes request ID, the key itself, and deadline. Equal key/digest replays the complete successful response with `replayed: true`; equal key with a different digest returns `E_IDEMPOTENCY_CONFLICT`. Only a failure known to occur before transaction commit is guaranteed not to occupy the key; after an uncertain commit, the key and receipt may already be durable.
 
 After an uncertain commit, reopen and retry with exactly the same query, wire parameters, schema precondition, and key. The receipt store is bounded to 10,000 entries / 64 MiB and one receipt to 1 MiB. At capacity, a new key returns `E_IDEMPOTENCY_CAPACITY`, while existing keys remain replayable. There is no automatic TTL or LRU.
 

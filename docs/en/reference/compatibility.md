@@ -7,7 +7,7 @@
 | protocol | request/response and wire values |
 | schema revision/hash | one database's application structure |
 
-Never infer one from another. Read the binary contract with `version --format json` and the actual database with `.storage` or `doctor --db`.
+Never infer one from another. Read the binary contract with `unionid version --format json`; inspect the actual database with the REPL `.storage` command or `unionid doctor --db <db> --format json`.
 
 Schema revision is a monotonic invalidation marker within one database. Schema hash is a SHA-256 manifest ordered by stable IDs. Identical source created independently does not imply a shared catalog lineage.
 

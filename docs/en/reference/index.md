@@ -4,7 +4,7 @@
 - [Errors, limits, and budgets](./limits)
 - [Versions and compatibility](./compatibility)
 
-When behavior is uncertain, prefer the installed `unionid <command> --help`, `version --format json`, and that release's contract. This site documents implemented mainline behavior, not future RFC targets.
+When behavior is uncertain, prefer the installed `unionid <command> --help`, `unionid version --format json`, and that release's contract. This site documents implemented mainline behavior, not future RFC targets.
 
 ## Complete manuals
 
@@ -18,4 +18,4 @@ Quick-reference pages confirm common flags. Use these manuals to implement clien
 - [Complete storage reference](./storage-reference): commit certainty, ledger, shadow generations, backup, and compaction.
 - [Complete service reference](./service-reference): trust boundary, fixed limits, backpressure, shutdown, metrics, and observers.
 
-These are user-oriented consolidations, not replacements for the machine-readable release contract. During upgrades, compare the docs, `version --format json`, and the target database's `doctor`/`check` results.
+These are user-oriented consolidations, not replacements for the machine-readable release contract. During upgrades, compare the docs, `unionid version --format json`, and the target database's `unionid doctor --db <db>` / `unionid check --db <db>` results.

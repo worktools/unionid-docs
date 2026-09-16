@@ -6,7 +6,7 @@
 - [错误、限制与预算](./limits)
 - [版本与兼容性](./compatibility)
 
-遇到行为不确定时，以安装版本的 `unionid <command> --help`、`version --format json` 和 release contract 为准。站点描述当前主线能力，不把未来设计 RFC 当作已实现功能。
+遇到行为不确定时，以安装版本的 `unionid <command> --help`、`unionid version --format json` 和 release contract 为准。站点描述当前主线能力，不把未来设计 RFC 当作已实现功能。
 
 ## 完整规范手册
 
@@ -20,4 +20,4 @@
 - [存储、迁移与恢复完整参考](./storage-reference)：commit 确定性、ledger、shadow generation、备份与压缩。
 - [服务部署与资源边界完整参考](./service-reference)：信任边界、固定上限、背压、shutdown、指标与 observer。
 
-这些页面是面向使用者的整理，不替代随二进制发布的 machine-readable contract。发布升级时应同时核对文档、`version --format json` 和目标数据库的 `doctor`/`check` 结果。
+这些页面是面向使用者的整理，不替代随二进制发布的 machine-readable contract。发布升级时应同时核对文档、`unionid version --format json` 和目标数据库的 `unionid doctor --db <db>` / `unionid check --db <db>` 结果。

@@ -4,6 +4,7 @@
 insert tasks {
   id = 1,
   title = "ship docs",
+  owner = {email = "alice@example.com"},
   tags = ["docs"],
   state = Pending,
 }

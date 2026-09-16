@@ -6,6 +6,7 @@
 insert tasks {
   id = 1,
   title = "ship docs",
+  owner = {email = "alice@example.com"},
   tags = ["docs"],
   state = Pending,
 }
@@ -58,4 +59,4 @@ target 可按源码顺序组合 filter、match、sort 和 take。多个 `set` �
 
 每次 Engine、CLI 或协议请求是一个原子脚本。parse、bind、算术、约束、预算、deadline 或持久化提交前失败都会回滚候选状态。redb commit 返回错误时结果可能不确定，Engine 会关闭句柄；调用方必须重开并运行 `check`，不能盲目重试。
 
-需要网络重试的 mutation 应使用幂等 key：同一 key 和 canonical digest 重放原响应，不同 digest 冲突，失败不占 key。数据效果与 receipt 在同一事务提交。
+需要网络重试的 mutation 应使用幂等 key：同一 key 和 canonical digest 重放原响应，不同 digest 冲突。只有确定发生在事务 commit 前的失败才保证不占 key；commit 返回错误时结果不确定，key 与 receipt 可能已经持久化，调用方必须重开并以完全相同的请求和 key 重试或检查。数据效果与 receipt 在同一事务提交。

@@ -32,6 +32,12 @@ struct Task {
     state: State,
 }
 
+let mut db = Engine::open_redb("data/app.redb")?;
+let task = Task {
+    id: 1,
+    title: "ship docs".into(),
+    state: State::Pending,
+};
 let prepared = db.prepare("insert tasks $row\nreturning")?;
 let response = db.execute_prepared(
     &prepared,

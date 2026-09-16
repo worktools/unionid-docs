@@ -18,9 +18,11 @@ type State =
 
 type Task = {
   id int,
+  title text,
   owner Contact,
   tags list text = [],
   state State,
+  priority int = 0,
 }
 
 table tasks Task
@@ -34,6 +36,7 @@ table tasks Task
 ```text
 insert tasks {
   id = 1,
+  title = "ship docs",
   owner = {email = "alice@example.com"},
   state = Running {worker = "local", attempt = 2},
 }

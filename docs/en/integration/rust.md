@@ -13,6 +13,10 @@ let mut read_only = Engine::open_redb_read_only("data/app.redb")?;
 ## Prepared serde parameters
 
 ```rust
+use std::collections::BTreeMap;
+use serde::{Deserialize, Serialize};
+use unionid::{Engine, Value};
+
 #[derive(Serialize, Deserialize)]
 enum State {
     Pending,
@@ -22,6 +26,12 @@ enum State {
 #[derive(Serialize, Deserialize)]
 struct Task { id: i64, title: String, state: State }
 
+let mut db = Engine::open_redb("data/app.redb")?;
+let task = Task {
+    id: 1,
+    title: "ship docs".into(),
+    state: State::Pending,
+};
 let prepared = db.prepare("insert tasks $row\nreturning")?;
 let response = db.execute_prepared(
     &prepared,

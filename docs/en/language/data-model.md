@@ -12,12 +12,15 @@ type State =
   Pending
   | Running {worker text, attempt int}
   | Done {result text}
+  | Failed {message text, retryable bool}
 
 type Task = {
   id int,
+  title text,
   owner Contact,
   tags list text = [],
   state State,
+  priority int = 0,
 }
 
 table tasks Task
@@ -29,6 +32,7 @@ Fields without defaults are required, including `option T` fields: write `None` 
 ```text
 insert tasks {
   id = 1,
+  title = "ship docs",
   owner = {email = "alice@example.com"},
   state = Running {worker = "local", attempt = 2},
 }

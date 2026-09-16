@@ -20,6 +20,6 @@ unionid migration diff --db app.redb \
 unionid migration plan --db app.redb --dir migrations
 ```
 
-Diff safely generates basic adds, drops, defaults, keys, and indexes. Suspected renames, required backfills, type conversions, and reorderings become invalid `todo` entries until a developer makes intent explicit.
+Diff directly generates deterministic adds, defaults, keys, and indexes. It also emits destructively marked drops for removed types, tables, fields, variants, and indexes. A data-bearing drop explicitly discards existing data and is not “safe”; review its impact before plan/apply. Suspected renames, required backfills, type or payload conversions, and reorderings become invalid `todo` entries until replaced with an explicit rename, `using old -> ...` conversion, or other intended operation.
 
 Back up, apply, check, and inspect status. Format 6 builds a checkpointed shadow generation, validates it, then atomically cuts over. Reads stay on the old generation while ordinary writes are blocked. Resume interruption with the identical files or bounded `migration advance --max-steps`; abort only an uncut target. There is no implicit down migration—restore a backup or write a forward migration.

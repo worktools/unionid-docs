@@ -39,7 +39,7 @@ i64、ID 与有限 f64 使用 string，避免 JSON number 精度差异。Null、
 {"type":"list","items":[]}
 {"type":"tuple","items":[{"type":"int","value":"1"}]}
 {"type":"record","fields":{"id":{"type":"int","value":"1"}}}
-{"type":"variant","name":"Running","variant_id":"17","args":[]}
+{"type":"variant","name":"Pending","variant_id":"16","args":[]}
 {"type":"named","type_id":"9","value":{"type":"variant","name":"Pending","variant_id":"16","args":[]}}
 ```
 
@@ -65,7 +65,7 @@ Canonical digest 包含 version、精确 query UTF-8、排序后的 typed params
 }
 ```
 
-相同 key/digest 重放完整成功响应并标记 `replayed: true`；相同 key 不同 digest 返回 `E_IDEMPOTENCY_CONFLICT`。普通失败不占 key。Commit 不确定时重开连接/数据库，用完全相同的 query、wire params、schema precondition 与 key 重试。
+相同 key/digest 重放完整成功响应并标记 `replayed: true`；相同 key 不同 digest 返回 `E_IDEMPOTENCY_CONFLICT`。只有确定发生在 transaction commit 前的失败才保证不占 key。Commit 不确定时 key 与 receipt 可能已经持久化；应重开连接/数据库，用完全相同的 query、wire params、schema precondition 与 key 重试。
 
 Receipt store 上限 10,000 条 / 64 MiB，单 receipt 1 MiB。达到容量时新 key 返回 `E_IDEMPOTENCY_CAPACITY`，已有 key 仍可 replay。没有自动 TTL/LRU。
 

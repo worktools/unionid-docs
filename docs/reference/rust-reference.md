@@ -58,7 +58,7 @@ let rows: Vec<Task> = response.typed_rows()?;
 
 ## 幂等 mutation
 
-`execute_idempotent_with_params` 接受独立的 idempotency key。相同 key 加相同 canonical digest 返回原成功响应；相同 key 加不同 digest 冲突；失败不占用 key。持久 Engine 将数据效果与完整成功回执放入同一事务。`request_id` 只关联一次尝试，不能替代 idempotency key。
+`execute_idempotent_with_params` 接受独立的 idempotency key。相同 key 加相同 canonical digest 返回原成功响应；相同 key 加不同 digest 冲突；只有确定发生在 transaction commit 前的失败才保证不占 key。commit 不确定时 key 与 receipt 可能已经持久化。持久 Engine 将数据效果与完整成功回执放入同一事务。`request_id` 只关联一次尝试，不能替代 idempotency key。
 
 ## 并发服务入口
 
@@ -76,7 +76,7 @@ let snapshot = engine.metrics_snapshot();
 
 ## Protocol API
 
-`protocol::Request` / `Response` 是 transport-neutral version 1 envelope；TCP 与 HTTP 只是 adapter。`Request::with_serde_param` 生成 typed wire value，`Response::typed_rows` / `typed_page` 无损还原应用类型。只有在双方支持时才选择 protocol v2 所需的新 scalar 值。
+`protocol::Request` / `Response` 是 transport-neutral 的 versioned data model；TCP 与 HTTP 只是 adapter。`Request::with_serde_param` 生成 typed wire value，`Response::typed_rows` / `typed_page` 无损还原应用类型。仅当值需要 protocol v2 的 production-scalar envelope 且双方支持 v2 时才选择 v2。
 
 ## 生成代码与 portable contract
 

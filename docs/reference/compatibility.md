@@ -9,7 +9,7 @@
 | protocol | wire value 与 request/response |
 | schema revision/hash | 单个数据库的应用结构 |
 
-不要从其中一个推断另一个。使用 `version --format json` 查看 binary contract，使用 `.storage` 或 `doctor --db` 查看实际数据库。
+不要从其中一个推断另一个。使用 `unionid version --format json` 查看 binary contract；使用 REPL 的 `.storage` 命令或 `unionid doctor --db <db> --format json` 查看实际数据库。
 
 ## Schema identity
 

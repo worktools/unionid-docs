@@ -30,6 +30,13 @@ jobs:
       - name: Build documentation
         run: npm run docs:build -- --base=./
 
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs/.vitepress/dist
+          if-no-files-found: error
+
       - name: Deploy to server
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: deploy

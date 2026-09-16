@@ -1,0 +1,46 @@
+name: Upload PR preview
+
+on:
+  workflow_run:
+    workflows:
+      - Upload
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: docs-pr-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Deploy pull request preview
+        id: deploy
+        uses: Pendect/action-rsyncer@8e05ffa5c93e5d9c9b167796b26044d2c616b2b9 # v2.0.0
+        env:
+          DEPLOY_KEY: ${{ secrets.rsync_private_key }}
+        with:
+          flags: '-avzr --progress'
+          options: ''
+          ssh_options: ''
+          src: 'site/'
+          dest: 'rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}/pr'
+
+      - name: Display deploy status
+        run: echo "${{ steps.deploy.outputs.status }}"

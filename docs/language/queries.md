@@ -74,6 +74,19 @@ select {id, customer, lines}
 
 `on` 左侧属于目标表，右侧属于当前 pipeline；类型必须相同，目标字段必须是主键、二级索引或复合索引第一项。末尾 `take` 是 1..=1000 的逐行硬上限，超出返回 `E_RELATION_LIMIT`，不会静默截断。稳定分页时 lookup 放在 page 后面。它不是通用 SQL join，也不能用于 mutation target。
 
+只需要判断是否存在匹配子项时使用有界相关 exists：
+
+```text
+from tasks
+filter exists {
+  from task_items
+  filter task_id == outer.id
+  filter state != Done
+}
+```
+
+内层普通路径属于目标表，`outer.id` 显式引用当前外层行。至少一个类型一致的相关等值目标必须是索引首项。首版内层只允许 filter，最多接受 10,000 个 driver rows，并在首个匹配处停止。
+
 跨请求稳定分页使用唯一 keyset 顺序：
 
 ```text

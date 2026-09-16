@@ -103,6 +103,19 @@ select {id, customer, lines}
 
 The target key must be a primary key, single-column index, or first component of a composite index, with the same type as the driver key. Per-driver `take` is a hard 1..=1000 bound; seeing `take + 1` returns `E_RELATION_LIMIT`. A lookup accepts at most 10,000 driver rows and returns `[]` for no match. After `page`, only lookup and select are allowed. Lookup is unavailable in mutation targets and does not offer target-side custom sort.
 
+## Bounded correlated exists
+
+```text
+from tasks
+filter exists {
+  from task_items
+  filter task_id == outer.id
+  filter state != Done
+}
+```
+
+The inner pipeline permits only filters and requires a type-compatible `target.path == outer.path` equality whose target leads a primary or secondary index. A stage accepts at most 10,000 driver rows and stops the target query at the first residual match. `explain.plan.exists` reports the target table, correlation paths, selected index, and limit without executing rows. The first version excludes not/nested exists, mutation targets, and other inner stages.
+
 ## Stable keyset pages
 
 ```text

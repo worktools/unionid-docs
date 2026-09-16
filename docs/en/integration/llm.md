@@ -56,7 +56,7 @@ Return one canonical .unid operation and no prose.
 Do not invent tables, fields, variants, or indexes.
 ```
 
-The reference tells the model that queries are ordered PRQL-style pipelines, ADTs use exhaustive `match`, an expected enum type permits `Pending` while standalone or ambiguous construction uses `State::Pending`, closures use `value -> expression` rather than `|value|`, and source has no semicolons.
+The reference tells the model that queries are ordered PRQL-style pipelines, ADTs use exhaustive `match`, an expected enum type permits `Pending` while standalone or ambiguous construction uses `State::Pending`, closures use `value -> expression` rather than `|value|`, and source has no semicolons. For correlated existence, it uses only `filter exists { from ... }`, references the driver as `outer.path`, and selects a target key backed by an index in the supplied schema.
 
 ## Validate generated source
 

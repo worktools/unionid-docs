@@ -6,8 +6,8 @@ Stages execute in source order. The planner uses primary and secondary indexes o
 from tasks
 filter priority >= 5
 derive urgent = priority >= 8
-select {id, title, state, urgent}
 sort {-priority, id}
+select {id, title, state, urgent}
 take 20
 ```
 
@@ -18,15 +18,15 @@ Common stages are `filter`, `derive`, `select`, `sort`, `take`, `page`, `group`,
 ```text
 from tasks
 filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  Failed {retryable, ..} => retryable,
-  _ => false,
+  State::Running {attempt, ..} => attempt >= 2
+  State::Failed {retryable, ..} => retryable
+  _ => false
 }
 derive label = match state {
-  Pending => "pending",
-  Running {worker, ..} => worker,
-  Done {result} => result,
-  Failed {message, ..} => message,
+  State::Pending => "pending"
+  State::Running {worker, ..} => worker
+  State::Done {result} => result
+  State::Failed {message, ..} => message
 }
 ```
 
@@ -35,15 +35,18 @@ Match checks types, exhaustiveness, and unreachable branches before scanning. Pa
 ## Local functions and aggregation
 
 ```text
-let urgent(priority int) = priority >= 8
 from tasks
-filter urgent(priority)
-group {state} (
-  aggregate {count = count(), max_priority = max priority}
-)
+let urgent = (priority: int) -> priority >= 8
+filter urgent priority
+group state {
+  aggregate {
+    count = count
+    max_priority = max priority
+  }
+}
 ```
 
-Local functions are pure, non-recursive, and bounded. Aggregation supports count/sum/min/max, typed empty input, full ADT keys, and bounded groups and working memory.
+Local functions use arrow closures and are pure, non-recursive, and bounded. A single parameter may use `value -> expression`; multiple parameters use `(left: T, right: U) -> expression`. Paired-pipe closures are not part of the language. Aggregation supports count/sum/min/max, typed empty input, full ADT keys, and bounded groups and working memory.
 
 ## Pagination and explain
 

@@ -13,6 +13,10 @@ Schema revision is a monotonic invalidation marker within one database. Schema h
 
 Adding a defaulted field is usually data-safe; adding a sum variant invalidates old exhaustive matches; rename preserves identity but breaks old source names; type changes, drops, and tighter constraints require explicit conversion and full preflight.
 
+Rust-shaped source syntax is a v0.7 breaking change. Canonical forms use `struct`/`enum`, `name: Type`, `Option<T>`/`List<T>`, `Type::Variant`, `field: value`, and `!`/`&&`/`||`. Closures remain `value -> expression`, never `|value|`. The parser temporarily accepts legacy forms for durable recovery and existing scripts, while the formatter emits only the new form.
+
+`take start..end` is now half-open; use `take start..=end` to include the endpoint. Review ranges manually, run the matching `unionid fmt` for other source migration, and regenerate binding digests.
+
 Protocol v1 supports foundational scalars and ADTs; v2 adds production scalars. Stream protocol is versioned independently.
 
 The binary only reads storage formats named in its release contract. Enabling incremental backup explicitly enters format 7, which older binaries reject. Logical backup/restore is the preferred cross-format and rollback boundary.

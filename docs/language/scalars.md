@@ -30,14 +30,14 @@ derive expires_at = created_at + ttl
 ## Bool 与集合 helper
 
 ```text
-filter (
+filter {
   priority >= 5
-  and tags contains "release"
-  and assignee.is_some()
-)
+  && contains tags "release"
+  && is_some assignee
+}
 ```
 
-可用比较、`not/and/or`、`contains`、`length`、Option helper，以及有预算的 `any/all`。复杂表达式应使用括号显式表达 precedence。
+可用比较、`!`、`&&`、`||`、`contains`、`length`、Option helper，以及有预算的 `any/all`。复杂表达式可用 `{}` 跨行；需要改变 precedence 时使用 `()`。集合 predicate 使用 `value -> expression`，不用竖线闭包。
 
 ## 索引大小边界
 

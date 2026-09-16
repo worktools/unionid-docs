@@ -9,11 +9,20 @@ unionid 是一个用 Rust 编写、把代数数据类型（ADT）直接放进数
 unionid 让 schema 直接表达所有合法形态：
 
 ```text
-type State =
+enum State {
   Pending
-  | Running {worker text, attempt int}
-  | Done {result text}
-  | Failed {message text, retryable bool}
+  Running {
+    worker: text
+    attempt: int
+  }
+  Done {
+    result: text
+  }
+  Failed {
+    message: text
+    retryable: bool
+  }
+}
 ```
 
 数据库会检查 constructor、payload、默认值、字段路径、索引和 migration。查询也理解这些类型，可以穷尽匹配 variant，而不是把 ADT 当成无类型 JSON。

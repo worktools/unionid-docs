@@ -19,4 +19,6 @@ There is no in-place downgrade. Restore the pre-upgrade logical backup into a ne
 
 `.unid` is canonical; `.uid` remains compatible until 1.0. Checksums do not include paths, so extension renames preserve ledger history. Dry-run bulk renames, update scripts, then confirm migration status is unchanged.
 
+For the v0.7 source-language migration, run the new `unionid fmt` on a branch and review the resulting structs, enums, colon fields, qualified constructors, and boolean operators. Closures remain `value -> expression`. `take start..end` is now half-open, so manually change it to `take start..=end` where the old inclusive result must be preserved. Then run `project check` and regenerate static Rust query bindings and digests.
+
 Regenerate static Rust query bindings and digests after relevant binary, schema, or query changes. Protocol v1 covers foundational values; production scalars require v2.

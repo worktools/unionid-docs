@@ -29,7 +29,7 @@ unionid project check --dir .
 - `schema.unid`：期望 schema；
 - `migrations/0001_initial.unid`：初始 migration；
 - `seed.unid`：typed seed；
-- `queries/list_running.unid`：匹配 `State.Running` 的 query；
+- `queries/list_running.unid`：匹配 `State::Running` 的 query；
 - `data/`：默认忽略的本地数据库目录。
 
 `project check` 依次检查规范格式、migration 最终 schema 和 query binding，但不会创建数据库。

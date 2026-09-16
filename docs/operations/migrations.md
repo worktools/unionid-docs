@@ -5,13 +5,11 @@
 每个 migration 包含 ID、可选 parent、内容 checksum 和应用后的 schema identity。ledger 必须是单链；已应用文件内容不可改变，分叉会被拒绝。
 
 ```text
-migration task_state_v2
+migration task_state_v2 {
   parent task_state_v1
-
-  rename variant State.Failed to Rejected
-
-  change variant State.Rejected to {code int, message text}
-    using old -> {code = 0, message = old.message}
+  rename variant State::Failed to Rejected
+  change variant State::Rejected to {code: int, message: text} using old -> {code: 0, message: old.message}
+}
 ```
 
 rename 保留稳定 ID；drop 后重建同名对象不会。字段类型、variant payload 和破坏性删除必须使用明确转换，不能由 diff 猜测。

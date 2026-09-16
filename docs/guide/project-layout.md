@@ -36,7 +36,7 @@ unionid migration plan --db data/tasks.redb --dir migrations
 source 不使用分号。`unionid fmt` 输出固定布局；CI 建议运行：
 
 ```bash
-unionid fmt --check schema.unid
+unionid fmt --check --file schema.unid
 unionid project check --dir .
 ```
 

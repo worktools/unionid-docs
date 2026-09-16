@@ -3,12 +3,11 @@
 Each migration has an immutable ID, optional parent, content checksum, and resulting schema identity. The ledger is a single chain; editing applied content or forking a parent is rejected.
 
 ```text
-migration task_state_v2
+migration task_state_v2 {
   parent task_state_v1
-
-  rename variant State.Failed to Rejected
-  change variant State.Rejected to {code int, message text}
-    using old -> {code = 0, message = old.message}
+  rename variant State::Failed to Rejected
+  change variant State::Rejected to {code: int, message: text} using old -> {code: 0, message: old.message}
+}
 ```
 
 Rename preserves stable identity. Drop and recreate does not. Type changes, payload changes, and destructive drops require explicit conversions.

@@ -3,20 +3,19 @@
 ## Pipeline order
 
 ```text
-let threshold = 5
-let urgent(priority int) = priority >= threshold
-
 from tasks
+let threshold = 5
+let urgent = (priority: int) -> priority >= threshold
 filter archived == false
-filter urgent(priority)
+filter urgent priority
 derive label = match state {
-  Pending => "pending",
-  Running {worker, ..} => worker,
-  Done {result} => result,
-  Failed {message, ..} => message,
+  State::Pending => "pending"
+  State::Running {worker, ..} => worker
+  State::Done {result} => result
+  State::Failed {message, ..} => message
 }
-select {id, title, state, priority, label}
 sort {-priority, id}
+select {id, title, state, priority, label}
 take 20
 ```
 
@@ -27,21 +26,21 @@ Stages execute in source order. `filter` changes the row set, `derive` extends t
 Expressions include field paths, bindings, parameters, typed literals and constructors, checked arithmetic, comparisons, boolean operators, option helpers, `contains`, `length`, bounded `any/all`, and non-recursive local functions.
 
 ```text
-filter (
+filter {
   priority >= $minimum
-  and tags contains "release"
-  and assignee.is_some()
-  and attempts.all(x -> x >= 0)
-)
+  && contains tags "release"
+  && is_some assignee
+  && all attempts (x -> x >= 0)
+}
 ```
 
-Parenthesize mixed `and`/`or`. Integer arithmetic is checked; every float intermediate must remain finite. Overflow, division by zero, NaN, and infinity return `E_ARITH`. A pipeline or DML target evaluates at most 100,000 list-predicate elements.
+Parenthesize mixed `&&`/`||`. Arrow closures use `x -> expression` or `(x: Type) -> expression`; paired-pipe closures are excluded because `|` already joins compact pipelines. Integer arithmetic is checked; every float intermediate must remain finite. Overflow, division by zero, NaN, and infinity return `E_ARITH`. A pipeline or DML target evaluates at most 100,000 list-predicate elements.
 
 ```text
 filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  Failed {retryable = true, ..} => true,
-  _ => false,
+  State::Running {attempt, ..} => attempt >= 2
+  State::Failed {retryable: true, ..} => true
+  _ => false
 }
 ```
 
@@ -50,17 +49,18 @@ Patterns recursively destructure sums, options, records, tuples, and lists. Befo
 ## Projection, sorting, and take
 
 ```text
-derive {subtotal = price + tax, has_owner = owner.is_some()}
+derive {subtotal = price + tax, has_owner = is_some owner}
 select {id, display = title, total = subtotal + shipping}
 sort {-priority, created_at, id}
-take 11..20
+take 11..21
+take 11..=20
 ```
 
-Projection order is response-column order. Duplicate or unknown fields fail even on an empty table. All typed values have a total order: sums by variant ID then payload, records by field ID, `None < Some`, and lists by prefix-first lexicographic order. Equal sort keys have no stable order; append the primary key when stability matters. Ranges are one-based and inclusive, so `11..20` skips ten rows and returns at most ten.
+Projection order is response-column order. Duplicate or unknown fields fail even on an empty table. All typed values have a total order: sums by variant ID then payload, records by field ID, `None < Some`, and lists by prefix-first lexicographic order. Equal sort keys have no stable order; append the primary key when stability matters. Ranges are one-based and follow Rust: `11..21` is half-open and `11..=20` includes the endpoint; both skip ten rows and return at most ten.
 
 ## Aggregation
 
-Ungrouped `aggregate` and `group ... (aggregate {...})` support count, sum, min, and max. On empty input, count is 0, sum is the numeric zero of its input type, and min/max return `option T`. A complete ADT may be a group key; without an explicit sort, group order is unspecified.
+Ungrouped `aggregate` and `group ... { aggregate {...} }` support count, sum, min, and max. On empty input, count is 0, sum is the numeric zero of its input type, and min/max return `Option<T>`. A complete ADT may be a group key; without an explicit sort, group order is unspecified.
 
 Limits are 256 aggregate outputs, 100,000 groups, 1,000,000 accumulator cells, 64 MiB estimated group state, 250,000 working rows, and 100,000 result rows. Exceeding a limit returns `E_LIMIT`.
 

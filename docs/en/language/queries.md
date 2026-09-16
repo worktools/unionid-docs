@@ -46,7 +46,7 @@ group state {
 }
 ```
 
-Local functions use arrow closures and are pure, non-recursive, and bounded. A single parameter may use `value -> expression`; multiple parameters use `(left: T, right: U) -> expression`. Paired-pipe closures are not part of the language. Aggregation supports count/sum/min/max, typed empty input, full ADT keys, and bounded groups and working memory.
+Local functions use arrow closures and are pure, non-recursive, and bounded. A single parameter may use `value -> expression`, or `(value: Type) -> expression` when typed; multiple parameters use `(left: T, right: U) -> expression`. Paired-pipe closures are not part of the language. Aggregation supports count/sum/min/max, typed empty input, full ADT keys, and bounded groups and working memory.
 
 ## Pagination and explain
 

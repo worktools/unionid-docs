@@ -43,7 +43,7 @@ let is_urgent = (priority: int) -> priority >= threshold
 filter is_urgent priority
 ```
 
-局部函数使用箭头闭包，是非递归纯函数，并在有限预算内推断与展开。单参数可写 `value -> expression`，多参数写 `(left: T, right: U) -> expression`；不使用 `|value|`。它们不能访问时钟、网络或可变全局状态。
+局部函数使用箭头闭包，是非递归纯函数，并在有限预算内推断与展开。单参数可写 `value -> expression`，带类型的单参数写 `(value: Type) -> expression`，多参数写 `(left: T, right: U) -> expression`；不使用 `|value|`。它们不能访问时钟、网络或可变全局状态。
 
 ## 聚合
 

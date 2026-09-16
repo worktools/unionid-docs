@@ -48,6 +48,19 @@ const zhSidebar = [
       { text: '错误与限制', link: '/reference/limits' },
       { text: '版本与兼容性', link: '/reference/compatibility' }
     ]
+  },
+  {
+    text: '完整规范手册',
+    collapsed: true,
+    items: [
+      { text: '语言规范', link: '/reference/language-reference' },
+      { text: '查询与表达式', link: '/reference/query-reference' },
+      { text: '数据协议', link: '/reference/protocol-reference' },
+      { text: 'CLI', link: '/reference/cli-reference' },
+      { text: 'Rust API', link: '/reference/rust-reference' },
+      { text: '存储、迁移与恢复', link: '/reference/storage-reference' },
+      { text: '服务与资源边界', link: '/reference/service-reference' }
+    ]
   }
 ]
 
@@ -98,6 +111,19 @@ const enSidebar = [
       { text: 'Command quick reference', link: '/en/reference/commands' },
       { text: 'Errors and limits', link: '/en/reference/limits' },
       { text: 'Versions and compatibility', link: '/en/reference/compatibility' }
+    ]
+  },
+  {
+    text: 'Complete manuals',
+    collapsed: true,
+    items: [
+      { text: 'Language specification', link: '/en/reference/language-reference' },
+      { text: 'Queries and expressions', link: '/en/reference/query-reference' },
+      { text: 'Data protocol', link: '/en/reference/protocol-reference' },
+      { text: 'CLI', link: '/en/reference/cli-reference' },
+      { text: 'Rust API', link: '/en/reference/rust-reference' },
+      { text: 'Storage and recovery', link: '/en/reference/storage-reference' },
+      { text: 'Service boundaries', link: '/en/reference/service-reference' }
     ]
   }
 ]

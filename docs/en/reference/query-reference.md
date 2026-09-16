@@ -49,12 +49,38 @@ Patterns recursively destructure sums, options, records, tuples, and lists. Befo
 ## Projection, sorting, and take
 
 ```text
-derive {subtotal = price + tax, has_owner = is_some owner}
-select {id, display = title, total = subtotal + shipping}
+from tasks
+derive {
+  subtotal = price + tax
+  has_owner = is_some owner
+}
 sort {-priority, created_at, id}
+select {
+  id
+  display = title
+  total = subtotal + shipping
+}
 take 11..21
+```
+
+The equivalent form with an inclusive endpoint is a separate pipeline:
+
+```text
+from tasks
+derive {
+  subtotal = price + tax
+  has_owner = is_some owner
+}
+sort {-priority, created_at, id}
+select {
+  id
+  display = title
+  total = subtotal + shipping
+}
 take 11..=20
 ```
+
+Use `take 20` when only a row limit is needed.
 
 Projection order is response-column order. Duplicate or unknown fields fail even on an empty table. All typed values have a total order: sums by variant ID then payload, records by field ID, `None < Some`, and lists by prefix-first lexicographic order. Equal sort keys have no stable order; append the primary key when stability matters. Ranges are one-based and follow Rust: `11..21` is half-open and `11..=20` includes the endpoint; both skip ten rows and return at most ten.
 

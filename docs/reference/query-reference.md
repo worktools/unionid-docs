@@ -69,11 +69,20 @@ select {
 ## Sort 与 take
 
 ```text
+from tasks
 sort {-priority, created_at, id}
-take 20
 take 11..21
+```
+
+包含末端的等价写法：
+
+```text
+from tasks
+sort {-priority, created_at, id}
 take 11..=20
 ```
+
+只限制行数时写 `take 20`。
 
 全部 typed value 共享 total order：sum 先 variant ID 再 payload，record 按 field ID，`None < Some`，list 做短前缀优先的词典序比较。相同 sort keys 的行无稳定顺序保证；需要稳定结果时以主键收尾。
 

@@ -9,6 +9,7 @@
 | 启动 server | `unionid server --db <db> --addr 127.0.0.1:7878` |
 | 连接 server | `unionid cli --addr 127.0.0.1:7878` |
 | 格式检查 | `unionid fmt --check --file <file>` |
+| 获取 LLM 查询上下文 | `unionid docs query --format json` |
 | 检查 schema | `unionid schema check --file schema.unid` |
 | 导出 schema | `unionid schema print --db <db>` |
 | 生成 migration | `unionid migration diff --db <db> --schema schema.unid --name <name>` |

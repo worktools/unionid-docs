@@ -1,33 +1,32 @@
-# Getting started
+# Getting started in five minutes
 
-You need Rust 1.94 or newer. Once installed, unionid can complete its first-use flow in any empty directory without a source checkout.
+This journey starts with an installed `unionid` binary and an empty directory. It ends with a reopenable redb database, repeatable migrations, a typed query, and a verified backup.
 
-## Install
+## 1. Install and inspect
+
+Rust 1.94 or newer is required:
 
 ```bash
 cargo install unionid --locked
-```
-
-Inspect the selected binary and its compatibility range:
-
-```bash
 unionid version --format json
 unionid doctor --format json
 ```
 
-Neither command creates a database.
+You may instead use a release archive or run `cargo build --locked` from source. The remaining commands are identical. These diagnostics do not create a database.
 
-## Create a project
+## 2. Generate a project
 
 ```bash
+mkdir unionid-first-use
+cd unionid-first-use
 unionid init tasks
 cd tasks
 unionid project check --dir .
 ```
 
-The generated project contains an ADT schema, an initial migration, seed data, and a typed query. `project check` validates schema, migrations, and queries in order without creating a database.
+`init` accepts only a missing or empty destination. It creates `schema.unid`, an initial migration, seed data, a typed query, and an ignored `data/` directory. `project check` validates canonical formatting, the migration target schema, and query binding without creating a database.
 
-## Create and query the database
+## 3. Create, write, and query
 
 ```bash
 unionid migration apply --db data/tasks.redb --dir migrations
@@ -35,15 +34,29 @@ unionid run --db data/tasks.redb --file seed.unid
 unionid run --db data/tasks.redb --file queries/list_running.unid
 ```
 
-The final command reopens redb in a new process and returns the seeded `Running` task.
+The final command reopens the database in a fresh process and returns the seeded `Running` task. Results preserve the complete variant and record payload; fields, constructors, payloads, and match coverage are checked before scanning.
 
-## Check the database
+## 4. Diagnose and check
 
 ```bash
 unionid doctor --db data/tasks.redb --format json
 unionid check --db data/tasks.redb
 ```
 
-`doctor` diagnoses a private temporary copy. `check` verifies the original database, catalog, typed rows, indexes, and migration ledger.
+`doctor` examines a permission-restricted temporary copy without changing the requested path. `check` validates the original redb file, catalog, schema hash, typed rows, RowIds, indexes, and migration ledger.
 
-Continue with the [language overview](/en/reference/).
+## 5. Back up and restore
+
+```bash
+unionid backup --db data/tasks.redb \
+  --output data/tasks.backup.json --format json
+unionid restore --backup data/tasks.backup.json \
+  --db data/restored.redb --format json
+unionid run --db data/restored.redb \
+  --file queries/list_running.unid
+unionid check --db data/restored.redb
+```
+
+Restore only writes a new destination. The restored schema identity, typed rows, and query result should match the source.
+
+Next, read [Project layout](./project-layout), [Queries](/en/language/queries), or [Rust integration](/en/integration/rust).

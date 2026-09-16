@@ -1,53 +1,21 @@
-# Language overview
+# Reference and boundaries
 
-unionid source uses no semicolons. Declarations and queries favor spaces, line breaks, and indentation; complex boolean expressions use parentheses to make grouping explicit.
+- [Command quick reference](./commands)
+- [Errors, limits, and budgets](./limits)
+- [Versions and compatibility](./compatibility)
 
-## Declare types and tables
+When behavior is uncertain, prefer the installed `unionid <command> --help`, `unionid version --format json`, and that release's contract. This site documents implemented mainline behavior, not future RFC targets.
 
-```text
-type State =
-  Pending
-  | Running {worker text, attempt int}
-  | Done {result text}
+## Complete manuals
 
-type Task = {
-  id int,
-  title text,
-  tags list text,
-  state State,
-}
+Quick-reference pages confirm common flags. Use these manuals to implement clients, review schemas, and write production runbooks with explicit syntax, failure semantics, and budgets:
 
-table tasks Task
-  key id
-```
+- [Complete language reference](./language-reference): lexical rules, types, values, keys, indexes, recursion, and atomic scripts.
+- [Complete query reference](./query-reference): stage order, match, aggregation, lookup, paging, and explain.
+- [Complete protocol reference](./protocol-reference): envelopes, typed wire values, idempotency, paging, and stream frames.
+- [Complete CLI reference](./cli-reference): project checks, generation, maintenance, JSON, and stable exit codes.
+- [Complete Rust API reference](./rust-reference): Engine, prepared serde, concurrency, pages, and recovery boundaries.
+- [Complete storage reference](./storage-reference): commit certainty, ledger, shadow generations, backup, and compaction.
+- [Complete service reference](./service-reference): trust boundary, fixed limits, backpressure, shutdown, metrics, and observers.
 
-## Insert a typed value
-
-```text
-insert tasks {
-  id = 1,
-  title = "sync directory",
-  tags = ["sync", "local"],
-  state = Running {worker = "worker-1", attempt = 2},
-}
-```
-
-## Compose query stages
-
-```text
-from tasks
-filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  _ => false,
-}
-derive state_label = match state {
-  Pending => "pending",
-  Running {worker, ..} => worker,
-  Done {result} => result,
-}
-select {id, title, state_label}
-sort id
-take 20
-```
-
-Common stages include `filter`, `select`, `derive`, `sort`, `take`, `page`, `group`, and `aggregate`.
+These are user-oriented consolidations, not replacements for the machine-readable release contract. During upgrades, compare the docs, `unionid version --format json`, and the target database's `unionid doctor --db <db>` / `unionid check --db <db>` results.

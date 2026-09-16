@@ -4,51 +4,39 @@ layout: home
 hero:
   name: unionid
   text: Model data with ADTs. Query it with pipelines.
-  tagline: A lightweight, type-safe Rust database that runs as an embedded engine, a local redb database, or a TCP service.
+  tagline: A complete path from a five-minute database to typed Rust integration, resumable migrations, stable pagination, and production operations.
   actions:
     - theme: brand
       text: Start in five minutes
       link: /en/guide/getting-started
     - theme: alt
-      text: Explore the data model
+      text: Read in order
       link: /en/guide/
 
 features:
-  - title: ADTs belong in the schema
-    details: Structs, enums, options, lists, tuples, and finite recursive types are checked by the database instead of hiding in untyped JSON.
-  - title: Pipelines understand types
-    details: Compose filter, match, derive, select, sort, aggregate, and page with type and exhaustiveness checks before scanning.
-  - title: Embedded or served
-    details: One Engine powers the Rust API, CLI, TCP, and HTTP over either in-memory or transactional redb storage.
+  - title: Schemas express business states
+    details: Records, sums, options, lists, tuples, and finite recursion have stable identity, defaults, constraints, and migration semantics.
+    link: /en/language/data-model
+  - title: Queries understand ADTs
+    details: Pipelines, exhaustive match, derive, aggregation, composite indexes, stable pagination, and explain share one type system.
+    link: /en/language/queries
+  - title: Development through production
+    details: CLI, Rust, and TCP/HTTP share one Engine with backup, resumable migration, checks, compaction, metrics, and controlled networking.
+    link: /en/operations/
 ---
 
-## A schema that represents state precisely
+## Start with one complete journey
 
-```text
-type State =
-  Pending
-  | Running {worker text, attempt int}
-  | Done {result text}
+Install unionid, generate a standalone project, then apply migrations, seed, query, reopen, check, back up, and restore:
 
-type Task = {
-  id int,
-  title text,
-  state State,
-}
-
-table tasks Task
-  key id
+```bash
+cargo install unionid --locked
+unionid init tasks
+cd tasks
+unionid project check --dir .
+unionid migration apply --db data/tasks.redb --dir migrations
+unionid run --db data/tasks.redb --file seed.unid
+unionid run --db data/tasks.redb --file queries/list_running.unid
 ```
 
-Queries destructure variants directly. Adding a new shape cannot be silently ignored by an old exhaustive match.
-
-```text
-from tasks
-filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  _ => false,
-}
-select {id, title, state}
-sort id
-take 20
-```
+The documentation follows real user decisions: run it first, model and query data, choose an integration boundary, then operate and upgrade it safely.

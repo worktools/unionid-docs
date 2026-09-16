@@ -4,51 +4,39 @@ layout: home
 hero:
   name: unionid
   text: 用 ADT 描述数据，用 pipeline 查询数据
-  tagline: 一个轻量、类型安全的 Rust 数据库，可作为嵌入式 Engine、本地 redb 数据库或 TCP 服务运行。
+  tagline: 从五分钟建库，到 typed Rust 集成、可恢复 migration、稳定分页与生产运维的一套完整路径。
   actions:
     - theme: brand
       text: 五分钟开始
       link: /guide/getting-started
     - theme: alt
-      text: 了解数据模型
+      text: 按顺序阅读
       link: /guide/
 
 features:
-  - title: ADT 是 schema 的一部分
-    details: struct、enum、option、list、tuple 与有限递归类型由数据库检查，不再藏在无类型 JSON 或 nullable 字段中。
-  - title: Pipeline 查询直接理解类型
-    details: 组合 filter、match、derive、select、sort、aggregate 与 page，并在扫描前完成类型与穷尽性检查。
-  - title: 从嵌入式到服务
-    details: 使用同一个 Engine 驱动 Rust API、CLI、TCP 与 HTTP，按需选择内存或 redb 事务存储。
+  - title: Schema 直接表达业务状态
+    details: record、sum、option、list、tuple 与有限递归类型都有稳定身份、默认值、约束和迁移语义。
+    link: /language/data-model
+  - title: Query 直接理解 ADT
+    details: pipeline、穷尽 match、derive、聚合、复合索引、稳定分页和 explain 共用同一类型系统。
+    link: /language/queries
+  - title: 从开发到生产
+    details: CLI、Rust、TCP/HTTP 共用 Engine，并提供备份、可恢复迁移、检查、压缩、指标和受控网络边界。
+    link: /operations/
 ---
 
-## 一个准确表达状态的 schema
+## 从一条完整路径开始
 
-```text
-type State =
-  Pending
-  | Running {worker text, attempt int}
-  | Done {result text}
+安装 `unionid`，生成独立项目，然后完成 migration、seed、query、重开、检查与 backup/restore：
 
-type Task = {
-  id int,
-  title text,
-  state State,
-}
-
-table tasks Task
-  key id
+```bash
+cargo install unionid --locked
+unionid init tasks
+cd tasks
+unionid project check --dir .
+unionid migration apply --db data/tasks.redb --dir migrations
+unionid run --db data/tasks.redb --file seed.unid
+unionid run --db data/tasks.redb --file queries/list_running.unid
 ```
 
-查询可以直接解构 variant；新增形态时，旧查询不会静默漏掉它。
-
-```text
-from tasks
-filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  _ => false,
-}
-select {id, title, state}
-sort id
-take 20
-```
+这套文档按使用者真实决策组织：先运行，再建模和查询，然后选择接入方式，最后进入生产运维与兼容性参考。

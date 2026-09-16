@@ -56,7 +56,7 @@ Return one canonical .unid operation and no prose.
 Do not invent tables, fields, variants, or indexes.
 ```
 
-参考会明确告诉模型：查询是 PRQL 风格的有序 pipeline；ADT 应使用穷尽 `match`；期望 enum 类型明确时可写 `Pending`，独立或有歧义时写 `State::Pending`；闭包使用 `value -> expression`，不使用 `|value|`；源码不写分号。生成相关存在查询时只使用 `filter exists { from ... }`，以 `outer.path` 引用外层行，并且只能选择 schema 中已有索引支持的目标键。
+参考会明确告诉模型：查询是 PRQL 风格的有序 pipeline；ADT 应使用穷尽 `match`；期望 enum 类型明确时可写 `Pending`，独立或有歧义时写 `State::Pending`；闭包使用 `value -> expression`，不使用 `|value|`；源码不写分号。生成相关存在查询时只使用 `filter exists { from ... }`，以 `outer.path` 引用外层行，并且只能选择 schema 中已有索引支持的目标键；目标路径与外层路径的类型必须兼容。
 
 ## 生成后的检查
 

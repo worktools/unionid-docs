@@ -9,10 +9,10 @@ let urgent = (priority: int) -> priority >= threshold
 filter archived == false
 filter urgent priority
 derive label = match state {
-  State::Pending => "pending"
-  State::Running {worker, ..} => worker
-  State::Done {result} => result
-  State::Failed {message, ..} => message
+  Pending => "pending"
+  Running {worker, ..} => worker
+  Done {result} => result
+  Failed {message, ..} => message
 }
 sort {-priority, id}
 select {id, title, state, priority, label}
@@ -40,8 +40,8 @@ filter {
 
 ```text
 filter match state {
-  State::Running {attempt, ..} => attempt >= 2
-  State::Failed {retryable: true, ..} => true
+  Running {attempt, ..} => attempt >= 2
+  Failed {retryable: true, ..} => true
   _ => false
 }
 ```

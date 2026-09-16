@@ -18,19 +18,19 @@ Common stages are `filter`, `derive`, `select`, `sort`, `take`, `page`, `group`,
 ```text
 from tasks
 filter match state {
-  State::Running {attempt, ..} => attempt >= 2
-  State::Failed {retryable, ..} => retryable
+  Running {attempt, ..} => attempt >= 2
+  Failed {retryable, ..} => retryable
   _ => false
 }
 derive label = match state {
-  State::Pending => "pending"
-  State::Running {worker, ..} => worker
-  State::Done {result} => result
-  State::Failed {message, ..} => message
+  Pending => "pending"
+  Running {worker, ..} => worker
+  Done {result} => result
+  Failed {message, ..} => message
 }
 ```
 
-Match checks types, exhaustiveness, and unreachable branches before scanning. Patterns recursively destructure sums, options, records, tuples, and lists under explicit budgets.
+Match checks types, exhaustiveness, and unreachable branches before scanning. The scrutinee fixes the enum type, so branches may omit `State::`; the qualified form remains available for disambiguation. Patterns recursively destructure sums, options, records, tuples, and lists under explicit budgets.
 
 ## Local functions and aggregation
 

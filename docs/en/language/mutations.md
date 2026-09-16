@@ -4,7 +4,7 @@
 insert tasks {
   id: 1
   owner: Contact {email: "alice@example.com"}
-  state: State::Pending
+  state: Pending
   tags: ["docs"]
   title: "ship docs"
 }
@@ -25,12 +25,12 @@ Upsert requires a primary key. A match replaces the complete typed row while pre
 ```text
 update tasks
 filter match state {
-  State::Pending => true
+  Pending => true
   _ => false
 }
 sort {-priority, id}
 take 10
-set state = State::Running {attempt: 1, worker: "worker-1"}
+set state = Running {attempt: 1, worker: "worker-1"}
 returning {id, state}
 ```
 

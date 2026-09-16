@@ -65,11 +65,11 @@ The planner can use a continuous equality prefix plus a range on the next compon
   id: 1
   tags: ["docs", "release"]
   location: (31.2, 121.5)
-  state: State::Running {worker: "w1", attempt: 2}
+  state: Running {worker: "w1", attempt: 2}
 }
 ```
 
-Records use `field: value`; duplicate, missing, and unknown fields fail. Write unit variants as `State::Pending`, record payloads as `State::Running {...}`, and positional payloads as `Pair(1, "x")`. `Some(value)`, `None`, an empty list, and a unit variant are distinct. Named types retain nominal identity; a structurally equal anonymous record cannot replace a named record.
+Records use `field: value`; duplicate, missing, and unknown fields fail. When the expected enum type is known, write unit variants as `Pending` and record payloads as `Running {...}`. Use `State::Pending` or `State::Running {...}` for standalone or ambiguous construction. Positional payloads use `Pair(1, "x")`. `Some(value)`, `None`, an empty list, and a unit variant are distinct. Named types retain nominal identity; a structurally equal anonymous record cannot replace a named record.
 
 | Type | Canonical rule |
 | --- | --- |

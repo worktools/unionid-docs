@@ -30,7 +30,7 @@ unionid check --db rehearsal.redb
 
 ## v0.7 源码语法迁移
 
-先在独立分支运行新版 `unionid fmt`，审查 `struct`/`enum`、冒号字段、`Type::Variant` 和 bool operator 的变化。闭包仍写 `value -> expression`。`take start..end` 已改为 Rust 半开区间，formatter 无法推断旧查询是否要保留包含末端的结果；需要时手工改为 `take start..=end`。完成后运行 `project check`，并重新生成静态 query binding 与 digest。
+先在独立分支运行新版 `unionid fmt`，审查 `struct`/`enum`、冒号字段、上下文构造器简写、完整 `Type::Variant` 和 bool operator 的变化。闭包仍写 `value -> expression`。`take start..end` 已改为 Rust 半开区间，formatter 无法推断旧查询是否要保留包含末端的结果；需要时手工改为 `take start..=end`。完成后运行 `project check`，并重新生成静态 query binding 与 digest。
 
 ## 生成客户端
 

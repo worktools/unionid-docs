@@ -20,19 +20,19 @@ take 20
 ```text
 from tasks
 filter match state {
-  State::Running {attempt, ..} => attempt >= 2
-  State::Failed {retryable, ..} => retryable
+  Running {attempt, ..} => attempt >= 2
+  Failed {retryable, ..} => retryable
   _ => false
 }
 derive state_label = match state {
-  State::Pending => "pending"
-  State::Running {worker, ..} => worker
-  State::Done {result} => result
-  State::Failed {message, ..} => message
+  Pending => "pending"
+  Running {worker, ..} => worker
+  Done {result} => result
+  Failed {message, ..} => message
 }
 ```
 
-match 在扫描前检查类型、穷尽性和不可达分支。pattern 可递归解构 sum、option、record、tuple 与 list；预算防止 pattern matrix 或展开失控。
+match 在扫描前检查类型、穷尽性和不可达分支。scrutinee 已确定 enum 类型，因此分支可省略 `State::`；需要消歧时仍可写完整限定名。pattern 可递归解构 sum、option、record、tuple 与 list；预算防止 pattern matrix 或展开失控。
 
 ## 局部 let 与纯函数
 
@@ -95,7 +95,7 @@ explain
 
 explain analyze
   from tasks
-  filter state == State::Pending
+  filter state == Pending
   take 20
 ```
 

@@ -47,12 +47,12 @@ table tasks: Task {
 insert tasks {
   id: 1
   owner: Contact {email: "alice@example.com"}
-  state: State::Running {attempt: 2, worker: "local"}
+  state: Running {attempt: 2, worker: "local"}
   title: "ship docs"
 }
 ```
 
-列表写作 `[1, 2]`，tuple 写作 `(1, "x")`，位置 payload 写作 `Pair(1, "x")`。有歧义时用 `State::Pending` 或 `State::Running {...}` 限定 constructor。
+列表写作 `[1, 2]`，tuple 写作 `(1, "x")`，位置 payload 写作 `Pair(1, "x")`。期望 enum 类型明确时可写 `Pending` 或 `Running {...}`；独立构造或有歧义时用 `State::Pending` 限定 constructor。
 
 ## 主键与索引
 

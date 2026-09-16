@@ -24,5 +24,6 @@ take 20
 - `{}` 表达 struct、enum、record value、字段集、match branches、group 和复杂表达式；`[]` 表达 list；`()` 表达 precedence、tuple、位置 payload 和调用。
 - 多行结构按换行分项且不写逗号；紧凑单行结构使用逗号。formatter 输出这一套 canonical 布局。
 - bool operator 使用 `!`、`&&`、`||`；混用 `&&` 与 `||` 时用括号明确分组。
+- 字段、match、set 等上下文已确定 enum 类型时可写 `Pending` / `Running {...}`；独立构造或有歧义时写 `State::Pending` / `State::Running {...}`。
 - 局部闭包写 `value -> expression` 或 `(value: Type) -> expression`。`|` 只连接单行 pipeline，不用作闭包边界。
 - 每个请求有解析、绑定和执行边界；类型、参数和 DML 目标在扫描前确定。

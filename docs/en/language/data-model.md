@@ -43,12 +43,12 @@ Fields without defaults are required, including `Option<T>` fields: write `None`
 insert tasks {
   id: 1
   owner: Contact {email: "alice@example.com"}
-  state: State::Running {attempt: 2, worker: "local"}
+  state: Running {attempt: 2, worker: "local"}
   title: "ship docs"
 }
 ```
 
-Lists use `[1, 2]`, tuples `(1, "x")`, and positional payloads `Pair(1, "x")`. Qualify ambiguous constructors as `State::Pending`.
+Lists use `[1, 2]`, tuples `(1, "x")`, and positional payloads `Pair(1, "x")`. Expected enum types allow `Pending` or `Running {...}`; qualify standalone or ambiguous constructors as `State::Pending`.
 
 ## Keys and indexes
 

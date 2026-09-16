@@ -65,12 +65,12 @@ Planner 可使用连续 equality prefix，加下一个 component 的 range；满
   id: 1
   tags: ["docs", "release"]
   location: (31.2, 121.5)
-  state: State::Running {worker: "w1", attempt: 2}
+  state: Running {worker: "w1", attempt: 2}
 }
 ```
 
 - Record 使用 `field: value`；字段重复、缺失或未知均失败。
-- Unit variant 写 `State::Pending`，record payload 写 `State::Running {...}`，位置 payload 写 `Pair(1, "x")`。
+- 期望 enum 类型明确时，unit variant 写 `Pending`，record payload 写 `Running {...}`；独立构造或有歧义时写 `State::Pending` / `State::Running {...}`。位置 payload 写 `Pair(1, "x")`。
 - `Some(value)` / `None` 对应 option；空 list 与 None 不等价。
 - 命名类型保留 nominal identity；匿名同形 record 不能替代命名 record。
 

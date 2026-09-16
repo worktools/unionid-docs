@@ -62,6 +62,19 @@ select {id, customer, lines}
 
 The left key belongs to the target, the right key to the current pipeline, and their static types must match. The target key must be a primary key, secondary index, or first composite-index component. Per-driver `take` is a hard 1..=1000 bound; excess matches return `E_RELATION_LIMIT` instead of truncating. This is not a general SQL join and cannot target a mutation.
 
+Use bounded correlated exists when only match presence is needed:
+
+```text
+from tasks
+filter exists {
+  from task_items
+  filter task_id == outer.id
+  filter state != Done
+}
+```
+
+Ordinary inner paths belong to the target table; `outer.id` explicitly reads the current driver row. At least one type-compatible correlation target must lead an index. The first version permits only inner filters, accepts at most 10,000 drivers, and stops at the first match. `not exists`, nested `exists`, mutation targets, and other inner stages are not supported yet.
+
 ```text
 from tasks
 sort {-priority, id}

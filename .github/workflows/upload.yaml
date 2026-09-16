@@ -28,7 +28,9 @@ jobs:
         run: npm ci
 
       - name: Build documentation
-        run: npm run docs:build -- --base=./
+        env:
+          DOCS_BASE: ${{ github.event_name == 'pull_request' && format('/{0}/pr/', github.repository) || format('/{0}/', github.repository) }}
+        run: npm run docs:build
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v4

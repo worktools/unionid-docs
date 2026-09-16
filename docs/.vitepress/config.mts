@@ -8,6 +8,7 @@ const shared = {
 }
 
 export default defineConfig({
+  base: process.env.DOCS_BASE || '/',
   title: 'unionid',
   description: '直接支持代数数据类型与 pipeline 查询的 Rust 数据库',
   cleanUrls: true,

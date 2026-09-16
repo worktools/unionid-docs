@@ -106,7 +106,7 @@ export default defineConfig({
   base: process.env.DOCS_BASE || '/',
   title: 'unionid',
   description: '直接支持代数数据类型与 pipeline 查询的 Rust 数据库',
-  cleanUrls: true,
+  cleanUrls: false,
   lastUpdated: true,
   head: [['meta', { name: 'theme-color', content: '#111827' }]],
   locales: {

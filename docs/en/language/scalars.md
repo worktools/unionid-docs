@@ -11,7 +11,9 @@
 | `date` | `@2026-09-08` | no implicit local time or calendar math |
 | `timestamp` | value with `Z` or offset | exact instant |
 | `duration` | `30seconds` | exact integer unit |
-| `decimal P S` | `decimal "19.90"` | precision 1..38, never implicit rounding |
+| `Decimal<P, S>` | `decimal "19.90"` | precision 1..38, never implicit rounding |
+
+`decimal P S` remains accepted as legacy input; the formatter emits `Decimal<P, S>`.
 
 Integer, float, duration, and same-type decimal operations are checked. Overflow, division by zero, or non-finite floats return `E_ARITH`. Decimal currently supports addition, subtraction, negation, and sum—not multiplication, division, average, or rounding.
 

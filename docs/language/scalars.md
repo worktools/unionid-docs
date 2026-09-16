@@ -13,7 +13,9 @@
 | `date` | `@2026-09-08` | 无隐式本地时区或 calendar 算术 |
 | `timestamp` | 带 `Z` 或 offset | 精确时间点 |
 | `duration` | `30seconds` | 整数精确单位 |
-| `decimal P S` | `decimal "19.90"` | precision 1..38，不隐式舍入 |
+| `Decimal<P, S>` | `decimal "19.90"` | precision 1..38，不隐式舍入 |
+
+`decimal P S` 仍作为兼容输入保留；格式化器统一输出 `Decimal<P, S>`。
 
 ## 算术
 

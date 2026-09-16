@@ -3,20 +3,19 @@
 ## Pipeline 结构
 
 ```text
-let threshold = 5
-let urgent(priority int) = priority >= threshold
-
 from tasks
+let threshold = 5
+let urgent = (priority: int) -> priority >= threshold
 filter archived == false
-filter urgent(priority)
+filter urgent priority
 derive label = match state {
-  Pending => "pending",
-  Running {worker, ..} => worker,
-  Done {result} => result,
-  Failed {message, ..} => message,
+  Pending => "pending"
+  Running {worker, ..} => worker
+  Done {result} => result
+  Failed {message, ..} => message
 }
-select {id, title, state, priority, label}
 sort {-priority, id}
+select {id, title, state, priority, label}
 take 20
 ```
 
@@ -27,23 +26,23 @@ stage 严格按源码顺序：`filter` 改变 row 集合；`derive` 扩充当前
 支持字段/嵌套路径、binding、参数、typed literal、constructor、算术、比较、bool operator、Option helper、`contains`、`length`、`any/all` 与非递归局部函数。
 
 ```text
-filter (
+filter {
   priority >= $minimum
-  and tags contains "release"
-  and assignee.is_some()
-  and attempts.all(x -> x >= 0)
-)
+  && contains tags "release"
+  && is_some assignee
+  && all attempts (x -> x >= 0)
+}
 ```
 
-混用 `and`/`or` 必须用括号明确分组。Int 算术 checked；float 每个中间结果必须有限；除零、溢出、NaN/Infinity 返回 `E_ARITH`。一个 pipeline/DML target 最多求值 100,000 个 list predicate element。
+混用 `&&`/`||` 必须用括号明确分组。箭头闭包写 `x -> expression` 或 `(x: Type) -> expression`，不使用会与 pipeline `|` 冲突的竖线闭包。Int 算术 checked；float 每个中间结果必须有限；除零、溢出、NaN/Infinity 返回 `E_ARITH`。一个 pipeline/DML target 最多求值 100,000 个 list predicate element。
 
 ## Match
 
 ```text
 filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  Failed {retryable = true, ..} => true,
-  _ => false,
+  Running {attempt, ..} => attempt >= 2
+  Failed {retryable: true, ..} => true
+  _ => false
 }
 ```
 
@@ -55,13 +54,13 @@ Pattern 可递归解构 sum、option、record、tuple 和 list。Binder 在扫�
 
 ```text
 derive {
-  subtotal = price + tax,
-  has_owner = owner.is_some(),
+  subtotal = price + tax
+  has_owner = is_some owner
 }
 select {
-  id,
-  display = title,
-  total = subtotal + shipping,
+  id
+  display = title
+  total = subtotal + shipping
 }
 ```
 
@@ -70,32 +69,42 @@ select {
 ## Sort 与 take
 
 ```text
+from tasks
 sort {-priority, created_at, id}
-take 20
-take 11..20
+take 11..21
 ```
+
+包含末端的等价写法：
+
+```text
+from tasks
+sort {-priority, created_at, id}
+take 11..=20
+```
+
+只限制行数时写 `take 20`。
 
 全部 typed value 共享 total order：sum 先 variant ID 再 payload，record 按 field ID，`None < Some`，list 做短前缀优先的词典序比较。相同 sort keys 的行无稳定顺序保证；需要稳定结果时以主键收尾。
 
-`take N` 接受非负整数。范围是一基闭区间：`11..20` 跳过前 10 行，最多取 10 行。
+`take N` 接受非负整数。范围使用一基 Rust 语义：`11..21` 是半开区间，`11..=20` 包含末端；两者都跳过前 10 行并最多取 10 行。
 
 ## Aggregate
 
 ```text
 from tasks
-group {owner, state} (
+group {owner, state} {
   aggregate {
-    count = count(),
-    total = sum estimate,
-    min_priority = min priority,
-    max_priority = max priority,
+    count = count
+    total = sum estimate
+    min_priority = min priority
+    max_priority = max priority
   }
-  filter count > 0
-  sort {-count, owner}
-)
+}
+filter count > 0
+sort {-count, owner}
 ```
 
-未分组 `aggregate` 与 `group ... (aggregate {...})` 支持 count/sum/min/max。`count` 空输入为 0，`sum` 使用输入数值类型的零，min/max 返回 `option T`。Group key 可为完整 ADT，未 sort 时不承诺组顺序。
+未分组 `aggregate` 与 `group ... { aggregate {...} }` 支持 count/sum/min/max。`count` 空输入为 0，`sum` 使用输入数值类型的零，min/max 返回 `Option<T>`。Group key 可为完整 ADT，未 sort 时不承诺组顺序。
 
 限制：最多 256 aggregate 输出、100,000 groups、1,000,000 accumulator cells、64 MiB 估算 group state、250,000 working rows、100,000 result rows。超限返回 `E_LIMIT`。
 
@@ -120,13 +129,7 @@ Page 后只允许 lookup 与 select。多个 lookup 可顺序组合，但不遍�
 from jobs
 filter archived == false
 sort {-priority, id}
-page 100
-
-# 下一页
 page 100 after "u1.payload.mac"
-
-# 上一页
-page 100 before "u1.payload.mac"
 ```
 
 limit 1..=1000，最多 16 sort keys。最终顺序必须由主键收尾，或由 equality-fixed prefix + 完整 unique-index suffix 证明唯一。Cursor 最多 8192 bytes，payload 最多 6144 bytes；HMAC 绑定 database identity、schema、canonical query、typed params、direction、limit、sequence 和 boundary tuple。

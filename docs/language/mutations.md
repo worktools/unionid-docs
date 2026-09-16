@@ -4,11 +4,11 @@
 
 ```text
 insert tasks {
-  id = 1,
-  title = "ship docs",
-  owner = {email = "alice@example.com"},
-  tags = ["docs"],
-  state = Pending,
+  id: 1
+  owner: Contact {email: "alice@example.com"}
+  state: Pending
+  tags: ["docs"]
+  title: "ship docs"
 }
 returning {id, state}
 ```
@@ -20,7 +20,7 @@ insert many tasks $rows
 returning {id, state}
 ```
 
-`$rows` 的绑定类型是 `list Task`。每行补齐默认值后，整批检查主键、unique index、预算和 deadline；任何一项失败都不会留下部分行。单批最多 100,000 行。
+`$rows` 的绑定类型是 `List<Task>`。每行补齐默认值后，整批检查主键、unique index、预算和 deadline；任何一项失败都不会留下部分行。单批最多 100,000 行。
 
 ## Upsert
 
@@ -36,21 +36,21 @@ upsert 要求主键。命中时完整替换 typed row 并保留 RowId；未命�
 ```text
 update tasks
 filter match state {
-  Pending => true,
-  _ => false,
+  Pending => true
+  _ => false
 }
 sort {-priority, id}
 take 10
-set state = Running {worker = "worker-1", attempt = 1}
+set state = Running {attempt: 1, worker: "worker-1"}
 returning {id, state}
 ```
 
 ```text
 delete tasks
-filter state == Done {result = "expired"}
+filter state == Done {result: "expired"}
 sort id
 take 100
-returning {id}
+returning id
 ```
 
 target 可按源码顺序组合 filter、match、sort 和 take。多个 `set` 同时基于旧行求值，不会按书写顺序互相读取；嵌套 record path、主键与索引在同一个原子请求内维护。

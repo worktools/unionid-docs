@@ -41,4 +41,13 @@ unionid query describe --schema schema.unid \
   --file queries/find_task.unid --output generated/find_task.json
 ```
 
+## LLM query documentation
+
+`unionid docs query` prints a prompt-ready query reference and runnable examples from the current binary. `--format json` separates the reference and examples. Supply the exact `schema print --format json` output for real generation and validate with `query describe`; see [LLM query generation](./llm).
+
+```bash
+unionid docs query
+unionid docs query --format json
+```
+
 Machine-facing commands support `--format json`. Automation should branch on structured error codes and exit classes rather than prose.

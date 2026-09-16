@@ -9,6 +9,7 @@
 | Start server | `unionid server --db <db> --addr 127.0.0.1:7878` |
 | Connect client | `unionid cli --addr 127.0.0.1:7878` |
 | Format check | `unionid fmt --check --file <file>` |
+| LLM query context | `unionid docs query --format json` |
 | Check schema | `unionid schema check --file schema.unid` |
 | Print schema | `unionid schema print --db <db>` |
 | Draft migration | `unionid migration diff --db <db> --schema schema.unid --name <name>` |

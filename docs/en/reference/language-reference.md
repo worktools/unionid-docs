@@ -8,8 +8,9 @@ This page specifies executable source syntax, not design-only proposals. `.unid`
 - Type and variant names start uppercase; tables, fields, parameters, and bindings normally start lowercase.
 - `#` begins a line comment. Inside strings, `#`, `|`, and commas are ordinary text.
 - Tabs cannot indent source. A top-level statement ends a preceding pipeline; a blank line does not terminate a file statement.
-- `{}` delimit records, field sets, match branches, aggregate fields, and multi-key sorts; `[]` delimit lists; `()` delimit tuples, calls, precedence groups, and multiline expressions.
-- Delimited neighboring items use commas. The canonical formatter retains trailing commas.
+- `{}` delimit structs, enums, record values, field sets, match branches, groups, and multiline expressions; `[]` delimit lists; `()` delimit tuples, positional payloads, calls, and precedence groups.
+- Newlines separate multiline items without commas; compact inline forms use commas. The canonical formatter emits this fixed layout.
+- `|` joins compact pipeline stages only. Local closures use `value -> expression` or `(value: Type) -> expression`, never paired pipes.
 
 Source is bounded to 1 MiB, 100,000 tokens, and 64 nested type/value/expression/layout levels. Limits return `E_LIMIT`; parse failures include a source span.
 
@@ -18,29 +19,36 @@ Source is bounded to 1 MiB, 100,000 tokens, and 64 nested type/value/expression/
 ```text
 type Point = (float, float)
 
-type Contact = {
-  email text,
-  nickname option text = None,
+struct Contact {
+  email: text
+  nickname: Option<text> = None
 }
 
-type State =
+enum State {
   Pending
-  | Running {worker text, attempt int}
-  | Failed(text, bool)
+  Running {
+    worker: text
+    attempt: int
+  }
+  Failed(text, bool)
+}
 ```
 
-The executable language supports primitives, named records and sums, tuples, `option T`, `list T`, and directly self-recursive named types. It does not support user generics or mutually recursive type groups.
+The executable language supports primitives, named records and sums, tuples, `Option<T>`, `List<T>`, and directly self-recursive named types. It does not support user generics or mutually recursive type groups.
 
-Record defaults must be fully type-checkable literals at schema time. Insert fills omitted fields recursively from defaults. An explicitly invalid value never falls back to a default. An option field without a default must still be written as `None`.
+Record defaults must be fully type-checkable literals at schema time. Insert fills omitted fields recursively from defaults. An explicitly invalid value never falls back to a default. An `Option<T>` field without a default must still be written as `None`.
 
 ## Tables, keys, and indexes
 
 ```text
-table tasks Task
+table tasks: Task {
   key id
+}
 
 create index tasks (state)
+
 create index tasks (state, -priority, id)
+
 create unique index tasks (owner.email, external_id)
 ```
 
@@ -54,14 +62,14 @@ The planner can use a continuous equality prefix plus a range on the next compon
 
 ```text
 {
-  id = 1,
-  tags = ["docs", "release"],
-  location = (31.2, 121.5),
-  state = State.Running {worker = "w1", attempt = 2},
+  id: 1
+  tags: ["docs", "release"]
+  location: (31.2, 121.5)
+  state: Running {worker: "w1", attempt: 2}
 }
 ```
 
-Records use `field = value`; duplicate, missing, and unknown fields fail. Write unit variants as `Pending`, record payloads as `Running {...}`, and positional payloads as `Pair(1, "x")`. `Some value`, `None`, an empty list, and a unit variant are distinct. Named types retain nominal identity; a structurally equal anonymous record cannot replace a named record.
+Records use `field: value`; duplicate, missing, and unknown fields fail. When the expected enum type is known, write unit variants as `Pending` and record payloads as `Running {...}`. Use `State::Pending` or `State::Running {...}` for standalone or ambiguous construction. Positional payloads use `Pair(1, "x")`. `Some(value)`, `None`, an empty list, and a unit variant are distinct. Named types retain nominal identity; a structurally equal anonymous record cannot replace a named record.
 
 | Type | Canonical rule |
 | --- | --- |
@@ -70,16 +78,19 @@ Records use `field = value`; duplicate, missing, and unknown fields fail. Write 
 | `date` | `@YYYY-MM-DD`; no local-time or calendar arithmetic |
 | `timestamp` | Must contain `Z` or a numeric offset |
 | `duration` | Exact integer units such as `30seconds` |
-| `decimal P S` | `decimal "19.90"`; P 1..38, S 0..P, no implicit rounding |
+| `Decimal<P, S>` | `decimal "19.90"`; P 1..38, S 0..P, no implicit rounding |
 
 Temporal conversion is explicit through `date_parse`, `timestamp_parse`, and `duration_parse`. Decimal text uses `decimal_parse old P S`; precision/scale changes use `decimal_rescale old P S`, which returns `E_DECIMAL_RANGE` rather than dropping non-zero digits.
 
 ## Finite recursion
 
 ```text
-type Tree =
-  Leaf text
-  | Branch {children list Tree}
+enum Tree {
+  Leaf(text)
+  Branch {
+    children: List<Tree>
+  }
+}
 ```
 
 A recursive type must have at least one finite inhabitant. A sum needs a terminating variant; required record/tuple members must terminate; `None` and the empty list provide termination. `type Loop = Loop` fails with `E_SCHEMA` before publication.

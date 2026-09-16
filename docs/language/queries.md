@@ -8,8 +8,8 @@
 from tasks
 filter priority >= 5
 derive urgent = priority >= 8
-select {id, title, state, urgent}
 sort {-priority, id}
+select {id, title, state, urgent}
 take 20
 ```
 
@@ -20,41 +20,41 @@ take 20
 ```text
 from tasks
 filter match state {
-  Running {attempt, ..} => attempt >= 2,
-  Failed {retryable, ..} => retryable,
-  _ => false,
+  Running {attempt, ..} => attempt >= 2
+  Failed {retryable, ..} => retryable
+  _ => false
 }
 derive state_label = match state {
-  Pending => "pending",
-  Running {worker, ..} => worker,
-  Done {result} => result,
-  Failed {message, ..} => message,
+  Pending => "pending"
+  Running {worker, ..} => worker
+  Done {result} => result
+  Failed {message, ..} => message
 }
 ```
 
-match 在扫描前检查类型、穷尽性和不可达分支。pattern 可递归解构 sum、option、record、tuple 与 list；预算防止 pattern matrix 或展开失控。
+match 在扫描前检查类型、穷尽性和不可达分支。scrutinee 已确定 enum 类型，因此分支可省略 `State::`；需要消歧时仍可写完整限定名。pattern 可递归解构 sum、option、record、tuple 与 list；预算防止 pattern matrix 或展开失控。
 
 ## 局部 let 与纯函数
 
 ```text
-let threshold = 5
-let is_urgent(priority int) = priority >= threshold
 from tasks
-filter is_urgent(priority)
+let threshold = 5
+let is_urgent = (priority: int) -> priority >= threshold
+filter is_urgent priority
 ```
 
-函数是非递归、纯函数，并在有限预算内推断与展开。它们不能访问时钟、网络或可变全局状态。
+局部函数使用箭头闭包，是非递归纯函数，并在有限预算内推断与展开。单参数可写 `value -> expression`，多参数写 `(left: T, right: U) -> expression`；不使用 `|value|`。它们不能访问时钟、网络或可变全局状态。
 
 ## 聚合
 
 ```text
 from tasks
-group {state} (
+group state {
   aggregate {
-    count = count(),
-    max_priority = max priority,
+    count = count
+    max_priority = max priority
   }
-)
+}
 sort state
 ```
 
@@ -89,8 +89,14 @@ page 100
 ## Explain
 
 ```text
-explain from tasks | filter id == 1
-explain analyze from tasks | filter state == Pending | take 20
+explain
+  from tasks
+  filter id == 1
+
+explain analyze
+  from tasks
+  filter state == Pending
+  take 20
 ```
 
 `explain` 只绑定和规划；`explain analyze` 在同一不可变读快照上执行，但不返回业务 rows、参数或 cursor，只返回实际耗时、examined/decoded rows、索引 entry、批次与工作内存峰值。

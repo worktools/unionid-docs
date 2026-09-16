@@ -5,44 +5,54 @@ unionid 的 schema 由积类型（record/tuple）与和类型（sum）组成。�
 ## Record 与 sum
 
 ```text
-type Contact = {
-  email text,
-  nickname option text = None,
+struct Contact {
+  email: text
+  nickname: Option<text> = None
 }
 
-type State =
+enum State {
   Pending
-  | Running {worker text, attempt int}
-  | Done {result text}
-  | Failed {message text, retryable bool}
-
-type Task = {
-  id int,
-  title text,
-  owner Contact,
-  tags list text = [],
-  state State,
-  priority int = 0,
+  Running {
+    worker: text
+    attempt: int
+  }
+  Done {
+    result: text
+  }
+  Failed {
+    message: text
+    retryable: bool
+  }
 }
 
-table tasks Task
+struct Task {
+  id: int
+  title: text
+  owner: Contact
+  tags: List<text> = []
+  state: State
+  priority: int = 0
+}
+
+table tasks: Task {
   key id
+}
 ```
 
-没有默认值的字段必须提供，即使类型是 `option T` 也要明确写 `None`。默认值在 schema 建立时类型检查，只能是纯 typed literal，不能引用字段、参数、时钟或函数。
+没有默认值的字段必须提供，即使类型是 `Option<T>` 也要明确写 `None`。默认值在 schema 建立时类型检查，只能是纯 typed literal，不能引用字段、参数、时钟或函数。
 
 ## 值与构造器
 
 ```text
 insert tasks {
-  id = 1,
-  title = "ship docs",
-  owner = {email = "alice@example.com"},
-  state = Running {worker = "local", attempt = 2},
+  id: 1
+  owner: Contact {email: "alice@example.com"}
+  state: Running {attempt: 2, worker: "local"}
+  title: "ship docs"
 }
 ```
 
-列表写作 `[1, 2]`，tuple 写作 `(1, "x")`，位置 payload 写作 `Pair(1, "x")`。有歧义时用 `State.Pending` 或 `State.Running {...}` 限定 constructor。
+列表写作 `[1, 2]`，tuple 写作 `(1, "x")`，位置 payload 写作 `Pair(1, "x")`。期望 enum 类型明确时可写 `Pending` 或 `Running {...}`；独立构造或有歧义时用 `State::Pending` 限定 constructor。
 
 ## 主键与索引
 
@@ -50,7 +60,9 @@ insert tasks {
 
 ```text
 create index tasks (state)
+
 create unique index tasks (owner.email)
+
 create index tasks (state, -priority, id)
 ```
 
@@ -59,17 +71,21 @@ create index tasks (state, -priority, id)
 ## 有限递归 ADT
 
 ```text
-type Tree =
-  Leaf text
-  | Branch {label text, children list Tree}
+enum Tree {
+  Leaf(text)
+  Branch {
+    label: text
+    children: List<Tree>
+  }
+}
 
-type Chain = {
-  value int,
-  next option Chain = None,
+struct Chain {
+  value: int
+  next: Option<Chain> = None
 }
 ```
 
-直接自递归必须存在终止路径；`option` 的 `None` 与空 list 可以终止。互递归、纯别名循环、共享对象图与循环引用不支持。值是深度不超过 64 的有限树。
+直接自递归必须存在终止路径；`Option<T>` 的 `None` 与空 list 可以终止。互递归、纯别名循环、共享对象图与循环引用不支持。值是深度不超过 64 的有限树。
 
 ## 稳定身份
 

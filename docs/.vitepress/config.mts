@@ -24,6 +24,7 @@ const zhSidebar = [
     items: [
       { text: '选择接入方式', link: '/integration/' },
       { text: 'CLI 与 REPL', link: '/integration/cli' },
+      { text: 'LLM 查询生成', link: '/integration/llm' },
       { text: 'Rust API', link: '/integration/rust' },
       { text: 'TCP、HTTP 与流', link: '/integration/protocols' }
     ]
@@ -88,6 +89,7 @@ const enSidebar = [
     items: [
       { text: 'Choose an entry point', link: '/en/integration/' },
       { text: 'CLI and REPL', link: '/en/integration/cli' },
+      { text: 'LLM query generation', link: '/en/integration/llm' },
       { text: 'Rust API', link: '/en/integration/rust' },
       { text: 'TCP, HTTP, and streams', link: '/en/integration/protocols' }
     ]

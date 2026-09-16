@@ -9,11 +9,20 @@ Applications often represent state with a string and several nullable fields. A 
 unionid describes every legal shape in the schema:
 
 ```text
-type State =
+enum State {
   Pending
-  | Running {worker text, attempt int}
-  | Done {result text}
-  | Failed {message text, retryable bool}
+  Running {
+    worker: text
+    attempt: int
+  }
+  Done {
+    result: text
+  }
+  Failed {
+    message: text
+    retryable: bool
+  }
+}
 ```
 
 The database validates constructors, payloads, defaults, field paths, indexes, and migrations. Queries understand the same types and exhaustively match variants instead of treating ADTs as untyped JSON.

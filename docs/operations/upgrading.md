@@ -28,6 +28,10 @@ unionid check --db rehearsal.redb
 
 当前兼容窗口同时接受两者，canonical 后缀是 `.unid`。migration checksum 不含路径，安全重命名不会改变 ledger。先 dry-run 批量迁移，再更新脚本和生成命令，最后确认 `migration status` 不变。
 
+## v0.7 源码语法迁移
+
+先在独立分支运行新版 `unionid fmt`，审查 `struct`/`enum`、冒号字段、上下文构造器简写、完整 `Type::Variant` 和 bool operator 的变化。闭包仍写 `value -> expression`。`take start..end` 已改为 Rust 半开区间，formatter 无法推断旧查询是否要保留包含末端的结果；需要时手工改为 `take start..=end`。完成后运行 `project check`，并重新生成静态 query binding 与 digest。
+
 ## 生成客户端
 
 使用静态 query binding 的应用在升级后应重新运行 `query rust`，提交新生成物与 digest，并重新编译。protocol v1 保持基础值兼容；生产 scalar 需要 v2。

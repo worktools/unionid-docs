@@ -17,6 +17,6 @@ Integer, float, duration, and same-type decimal operations are checked. Overflow
 
 `timestamp ± duration` returns a timestamp and `timestamp - timestamp` returns a duration. Dates do not consult a clock or local timezone.
 
-Boolean expressions support comparisons, `not/and/or`, `contains`, `length`, option helpers, and bounded `any/all`. Parenthesize mixed boolean operators.
+Boolean expressions support comparisons, `!`, `&&`, `||`, `contains`, `length`, option helpers, and bounded `any/all`. Braces delimit multiline expressions; parentheses change precedence. Collection predicates use `value -> expression`, never paired pipes.
 
 Indexed byte leaves are limited to 8192 octets, complete durable index keys to 64 KiB, and ordinary typed values to 16 MiB. Violations fail atomically.

@@ -48,6 +48,15 @@ unionid query describe --schema schema.unid \
   --file queries/find_task.unid --output generated/find_task.json
 ```
 
+## LLM 查询文档
+
+`unionid docs query` 从当前二进制输出可直接加入 prompt 的查询参考和可运行示例；`--format json` 将 reference 与 examples 分开。生成真实查询时还应提供 `schema print --format json` 的 exact schema，并用 `query describe` 静态绑定。完整流程见 [LLM 查询生成](./llm)。
+
+```bash
+unionid docs query
+unionid docs query --format json
+```
+
 ## 机器可读命令
 
 `version`、`doctor`、migration、backup、restore、compact 等支持 `--format json`。自动化应根据退出码类别和结构化 error code 分支，不要匹配人类错误句子。

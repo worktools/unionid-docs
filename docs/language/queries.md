@@ -13,7 +13,7 @@ select {id, title, state, urgent}
 take 20
 ```
 
-常用 stage 包括 `filter`、`derive`、`select`、`sort`、`take`、`page`、`group` 与 `aggregate`。
+常用 stage 包括 `filter`、`derive`、`select`、`sort`、`take`、`page`、`group`、`aggregate` 与 `window`。
 
 ## Match ADT
 
@@ -58,7 +58,30 @@ group state {
 sort state
 ```
 
-支持 `count/sum/min/max`、typed 空输入、完整 ADT key，并限制 group、accumulator cell 和估算工作内存。
+支持 `count/count_distinct/avg/sum/min/max`、typed 空输入、完整 ADT key，并限制 group、accumulator cell 和估算工作内存。
+
+`count_distinct` 按完整 typed value 去重，因此 enum constructor、payload、record、option 与 list 内容都会参与比较。`avg int` 返回 `Option<float>`；`avg float` 与 `avg duration` 保留输入的命名类型，空输入返回 `None`。decimal 的平均值仍会被拒绝，直到精度与舍入规则确定。
+
+## 基础排名窗口
+
+`window` 保留输入行，并追加命名的 `int` 排名字段。`partition` 可省略，`sort` 必须明确给出：
+
+```text
+from tasks
+window {
+  partition queue
+  sort {-priority, created_at}
+  position = row_number
+  placing = rank
+  dense = dense_rank
+}
+filter position <= 3
+sort {queue, position}
+```
+
+`row_number` 为每个分区生成连续位置；`rank` 让并列值共享名次并留下空缺；`dense_rank` 不留空缺。partition 使用完整 typed equality，sort 使用与普通 `sort` 相同的 typed total order。window 自身不会重排输出行；如果 `row_number` 需要跨恢复稳定，应在 window sort 末尾加入主键。
+
+窗口 stage 受 250,000 working rows、64 MiB working state 和最多 256 个输出字段限制。当前不支持 frame、`lag`、`lead`、窗口 aggregate 或与 cursor `page` 组合。
 
 ## Lookup 与分页
 

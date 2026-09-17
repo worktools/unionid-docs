@@ -85,7 +85,18 @@ filter exists {
 }
 ```
 
-内层普通路径属于目标表，`outer.id` 显式引用当前外层行。至少一个类型一致的相关等值目标必须是索引首项。首版内层只允许 filter，最多接受 10,000 个 driver rows，并在首个匹配处停止。目前尚不支持 `not exists`、嵌套 `exists`、mutation target，以及其他内层 stage。
+内层普通路径属于目标表，`outer.id` 显式引用当前外层行。至少一个类型一致的相关等值目标必须是索引首项。首版内层只允许 filter，最多接受 10,000 个 driver rows，并在首个匹配处停止。
+
+使用相同内层 pipeline 的 `filter not exists { ... }` 可保留没有匹配目标行的 driver，包括完全没有子项，或所有子项都未通过 residual filters 的情况。目前仍不支持嵌套 `exists`、mutation target，以及其他内层 stage。
+
+```text
+from tasks
+filter not exists {
+  from task_items
+  filter task_id == outer.id
+  filter state != Done
+}
+```
 
 跨请求稳定分页使用唯一 keyset 顺序：
 

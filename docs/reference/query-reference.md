@@ -19,7 +19,7 @@ select {id, title, state, priority, label}
 take 20
 ```
 
-stage 严格按源码顺序：`filter` 改变 row 集合；`derive` 扩充当前 schema；`select` 改变后续可见字段；`sort` 定义 total order；`take/page` 限制结果。Planner 只跳过前置 `let`，不越过其他 stage 重新排序。
+stage 严格按源码顺序：`filter` 改变 row 集合；`derive` 扩充当前 schema；`select` 改变后续可见字段；`union`/`intersect`/`except` 组合同形结果；`sort` 定义 total order；`take/page` 限制结果。Planner 只跳过前置 `let`，不越过其他 stage 重新排序。
 
 ## 表达式
 
@@ -136,6 +136,31 @@ filter exists {
 
 内层只允许 filter，且至少有一个 `target.path == outer.path` 的同型等值条件。目标路径必须是主键或 index 首项。一个 stage 最多接受 10,000 driver rows，目标查询在首个 residual match 处停止。使用 `filter not exists { ... }` 保留没有匹配行的 driver。`explain.plan.exists` 返回 `negated`、目标表、相关路径、实际索引和上限，但不执行 row。首版不支持嵌套 exists、mutation target 或其他内层 stage。
 
+## 类型化集合运算
+
+```text
+from active_tasks
+select {state, tags}
+union {
+  from archived_tasks
+  filter state != Done
+  select {state, tags}
+}
+sort state
+```
+
+`union`、`intersect` 和 `except` 用花括号明确右侧 pipeline。两侧在集合 stage 处必须具有完全相同的字段名、顺序和类型；命名 ADT 使用 stable type ID，结构相似但名字不同的类型不兼容，也不做隐式数值提升。
+
+三种运算都按完整 typed row 去重，包括嵌套 enum payload、record、tuple、Option 和 list：
+
+- `union` 先保留左侧首次出现的行，再保留右侧尚未出现的行。
+- `intersect` 按左侧首次出现顺序保留同时存在于右侧的行。
+- `except` 按左侧首次出现顺序保留右侧不存在的行。
+
+集合 stage 的首次出现顺序不替代业务排序；需要明确最终顺序时在其后写 `sort`。首版不支持嵌套集合运算，任一侧都不能使用 cursor `page`。可先在两侧 `filter`/`take`，合并后再 `sort`/`take`。
+
+左右 materialized rows、encoded bytes 和 membership 状态合并计入 working-state 上限，并响应 deadline/cancel。`explain.plan.set_operations` 返回 operator、右侧表和访问计划，不读取数据行；`explain analyze` 合并两侧无业务值的执行计数。
+
 ## Keyset page
 
 ```text
@@ -151,7 +176,7 @@ limit 1..=1000，最多 16 sort keys。最终顺序必须由主键收尾，或�
 
 ## Explain 与运行画像
 
-`explain` 返回 access kind、索引 lookup、当前 candidate 数、源码 stage 顺序和结果 schema，不执行 row。`explain analyze` 执行普通查询路径但不返回业务值，增加 prepare/plan/execute 耗时、returned/examined/decoded rows、index entry、redb cache、batch 和 working-memory peak。
+`explain` 返回 access kind、索引 lookup、当前 candidate 数、源码 stage 顺序、lookup/exists/set-operation 子计划和结果 schema，不执行 row。`explain analyze` 执行普通查询路径但不返回业务值，增加 prepare/plan/execute 耗时、returned/examined/decoded rows、index entry、redb cache、batch 和 working-memory peak。
 
 ## 通用资源边界
 

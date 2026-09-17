@@ -56,7 +56,7 @@ Return one canonical .unid operation and no prose.
 Do not invent tables, fields, variants, or indexes.
 ```
 
-The reference tells the model that queries are ordered PRQL-style pipelines, ADTs use exhaustive `match`, an expected enum type permits `Pending` while standalone or ambiguous construction uses `State::Pending`, closures use `value -> expression` rather than `|value|`, and source has no semicolons. For correlated existence, it uses `filter exists { from ... }` or `filter not exists { from ... }`, references the driver as `outer.path`, and selects a target key backed by an index in the supplied schema. The target and outer correlation paths must have compatible types.
+The reference tells the model that queries are ordered PRQL-style pipelines, ADTs use exhaustive `match`, an expected enum type permits `Pending` while standalone or ambiguous construction uses `State::Pending`, closures use `value -> expression` rather than `|value|`, and source has no semicolons. Aggregation is limited to `count/count_distinct/avg/sum/min/max`. When rows must remain rows while gaining per-group positions, it emits a `window` with an explicit sort and `row_number/rank/dense_rank`, without inventing frames, lag, or lead. For correlated existence, it uses `filter exists { from ... }` or `filter not exists { from ... }`, references the driver as `outer.path`, and selects a target key backed by an index in the supplied schema. The target and outer correlation paths must have compatible types.
 
 ## Validate generated source
 

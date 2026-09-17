@@ -19,7 +19,7 @@ select {id, title, state, priority, label}
 take 20
 ```
 
-stage 严格按源码顺序：`filter` 改变 row 集合；`derive` 扩充当前 schema；`select` 改变后续可见字段；`union`/`intersect`/`except` 组合同形结果；`sort` 定义 total order；`take/page` 限制结果。Planner 只跳过前置 `let`，不越过其他 stage 重新排序。
+stage 严格按源码顺序：`filter` 改变 row 集合；`derive` 扩充当前 schema；`select` 改变后续可见字段；`union`/`intersect`/`except` 组合同形结果；`aggregate` 归约结果；`window` 追加排名；`sort` 定义 total order；`take/page` 限制结果。Planner 只跳过前置 `let`，不越过其他 stage 重新排序。
 
 ## 表达式
 
@@ -104,9 +104,28 @@ filter count > 0
 sort {-count, owner}
 ```
 
-未分组 `aggregate` 与 `group ... { aggregate {...} }` 支持 count/sum/min/max。`count` 空输入为 0，`sum` 使用输入数值类型的零，min/max 返回 `Option<T>`。Group key 可为完整 ADT，未 sort 时不承诺组顺序。
+未分组 `aggregate` 与 `group ... { aggregate {...} }` 支持 count、count_distinct、avg、sum、min 和 max。`count` 与 `count_distinct` 空输入为 0，`sum` 使用输入数值类型的零，avg/min/max 返回 `Option<T>`。`avg int` 的具体输出是 `Option<float>`；float/duration avg 保留命名类型。decimal avg 返回 `E_TYPE`。Group key 与 count_distinct 输入可为完整 ADT，未 sort 时不承诺组顺序。
 
-限制：最多 256 aggregate 输出、100,000 groups、1,000,000 accumulator cells、64 MiB 估算 group state、250,000 working rows、100,000 result rows。超限返回 `E_LIMIT`。
+限制：最多 256 aggregate 输出、100,000 groups、1,000,000 accumulator cells、64 MiB 估算 group state、250,000 working rows、100,000 result rows。count_distinct 的 typed 去重键计入 group state。超限返回 `E_LIMIT`。
+
+## 基础排名窗口
+
+```text
+from tasks
+window {
+  partition state
+  sort {-priority, created_at}
+  position = row_number
+  placing = rank
+  dense = dense_rank
+}
+filter position <= 3
+sort {state, position}
+```
+
+partition 可省略；sort 必须存在。row_number 返回分区内 1..N，rank 对并列 typed sort tuple 留出名次空缺，dense_rank 不留空缺。并列 row_number 由进入 stage 的稳定顺序区分；需要跨恢复稳定时，把主键追加到 window sort。
+
+partition 支持完整 ADT equality，sort 支持完整 typed total order。window 保留输入基数与原输出顺序，仅追加不覆盖已有字段的 int 列；后续可继续 filter/select/sort/take。空输入仍保留结果 schema。每个 window 最多 256 个输出，并计入 250,000 working rows 与 64 MiB working state。page、frame、lag/lead、窗口 aggregate 与用户定义窗口函数尚不支持。
 
 ## 有界 lookup
 

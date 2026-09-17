@@ -11,7 +11,7 @@ select {id, title, state, urgent}
 take 20
 ```
 
-Common stages are `filter`, `derive`, `select`, `sort`, `take`, `page`, `group`, and `aggregate`.
+Common stages are `filter`, `derive`, `select`, `sort`, `take`, `page`, `group`, `aggregate`, and `window`.
 
 ## Match ADTs
 
@@ -46,7 +46,30 @@ group state {
 }
 ```
 
-Local functions use arrow closures and are pure, non-recursive, and bounded. A single parameter may use `value -> expression`; multiple parameters use `(left: T, right: U) -> expression`. Paired-pipe closures are not part of the language. Aggregation supports count/sum/min/max, typed empty input, full ADT keys, and bounded groups and working memory.
+Local functions use arrow closures and are pure, non-recursive, and bounded. A single parameter may use `value -> expression`; multiple parameters use `(left: T, right: U) -> expression`. Paired-pipe closures are not part of the language. Aggregation supports count/count_distinct/avg/sum/min/max, typed empty input, full ADT keys, and bounded groups and working memory.
+
+`count_distinct` compares complete typed values, including enum constructors and payloads, records, options, and lists. `avg int` returns `Option<float>`; float and duration averages preserve named input types, and empty input returns `None`. Decimal averages remain rejected until precision and rounding rules are defined.
+
+## Basic ranking windows
+
+`window` preserves every input row and appends named `int` ranking fields. `partition` is optional, while `sort` is always explicit:
+
+```text
+from tasks
+window {
+  partition queue
+  sort {-priority, created_at}
+  position = row_number
+  placing = rank
+  dense = dense_rank
+}
+filter position <= 3
+sort {queue, position}
+```
+
+`row_number` assigns consecutive positions per partition. `rank` gives ties the same position and leaves gaps; `dense_rank` leaves no gaps. Partitioning uses complete typed equality and ordering uses the same typed total order as ordinary `sort`. A window does not reorder output rows. Append a primary key to the window sort when `row_number` must remain stable across reopen and recovery.
+
+A window is bounded by 250,000 working rows, 64 MiB working state, and 256 output fields. Frames, `lag`, `lead`, window aggregates, and cursor `page` composition are not supported yet.
 
 ## Pagination and explain
 

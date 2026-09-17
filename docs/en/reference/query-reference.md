@@ -19,7 +19,7 @@ select {id, title, state, priority, label}
 take 20
 ```
 
-Stages execute in source order. `filter` changes the row set, `derive` extends the current schema, `select` changes fields visible to later stages, `union`/`intersect`/`except` combine schema-identical results, `sort` defines order, and `take`/`page` bounds the result. The planner skips only leading `let` stages and does not reorder work across other stage boundaries.
+Stages execute in source order. `filter` changes the row set, `derive` extends the current schema, `select` changes fields visible to later stages, `union`/`intersect`/`except` combine schema-identical results, `aggregate` reduces rows, `window` appends rankings, `sort` defines order, and `take`/`page` bounds the result. The planner skips only leading `let` stages and does not reorder work across other stage boundaries.
 
 ## Expressions and match
 
@@ -86,9 +86,28 @@ Projection order is response-column order. Duplicate or unknown fields fail even
 
 ## Aggregation
 
-Ungrouped `aggregate` and `group ... { aggregate {...} }` support count, sum, min, and max. On empty input, count is 0, sum is the numeric zero of its input type, and min/max return `Option<T>`. A complete ADT may be a group key; without an explicit sort, group order is unspecified.
+Ungrouped `aggregate` and `group ... { aggregate {...} }` support count, count_distinct, avg, sum, min, and max. On empty input, count/count_distinct are 0, sum is the numeric zero of its input type, and avg/min/max return `Option<T>`. An integer average specifically returns `Option<float>`; float and duration averages preserve named input types. Decimal average returns `E_TYPE`. Complete ADTs may be group keys or count_distinct inputs. Without an explicit sort, group order is unspecified.
 
-Limits are 256 aggregate outputs, 100,000 groups, 1,000,000 accumulator cells, 64 MiB estimated group state, 250,000 working rows, and 100,000 result rows. Exceeding a limit returns `E_LIMIT`.
+Limits are 256 aggregate outputs, 100,000 groups, 1,000,000 accumulator cells, 64 MiB estimated group state, 250,000 working rows, and 100,000 result rows. Typed count_distinct keys count toward group state. Exceeding a limit returns `E_LIMIT`.
+
+## Basic ranking windows
+
+```text
+from tasks
+window {
+  partition state
+  sort {-priority, created_at}
+  position = row_number
+  placing = rank
+  dense = dense_rank
+}
+filter position <= 3
+sort {state, position}
+```
+
+Partitioning is optional and ordering is required. row_number returns 1..N inside each partition. rank gives equal typed sort tuples the same position and leaves gaps, while dense_rank leaves no gaps. Stable input order breaks row_number ties; append the primary key to the window sort when reopen-stable results are required.
+
+Partitions support complete ADT equality and sort keys use the complete typed total order. A window preserves input cardinality and output order, appending non-conflicting int fields; later filter/select/sort/take stages remain available. Empty input retains the result schema. Each window allows 256 outputs and counts toward 250,000 working rows and 64 MiB working state. Page, frames, lag/lead, window aggregates, and user-defined window functions are not supported.
 
 ## Bounded lookup
 

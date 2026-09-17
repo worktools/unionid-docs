@@ -11,7 +11,7 @@ When behavior is uncertain, prefer the installed `unionid <command> --help`, `un
 Quick-reference pages confirm common flags. Use these manuals to implement clients, review schemas, and write production runbooks with explicit syntax, failure semantics, and budgets:
 
 - [Complete language reference](./language-reference): lexical rules, types, values, keys, indexes, recursion, and atomic scripts.
-- [Complete query reference](./query-reference): stage order, match, aggregation, lookup, paging, and explain.
+- [Complete query reference](./query-reference): stage order, match, aggregation, lookup, typed set operations, paging, and explain.
 - [Complete protocol reference](./protocol-reference): envelopes, typed wire values, idempotency, paging, and stream frames.
 - [Complete CLI reference](./cli-reference): project checks, generation, maintenance, JSON, and stable exit codes.
 - [Complete Rust API reference](./rust-reference): Engine, prepared serde, concurrency, pages, and recovery boundaries.

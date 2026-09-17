@@ -13,7 +13,7 @@
 速查页用于确认常用参数；以下手册用于实现客户端、评审 schema 或制定生产运行手册，明确区分语法、故障语义与资源上限：
 
 - [语言完整参考](./language-reference)：词法、类型、值、主键、索引、递归和原子脚本。
-- [查询与表达式完整参考](./query-reference)：stage 顺序、match、聚合、lookup、分页和 explain。
+- [查询与表达式完整参考](./query-reference)：stage 顺序、match、聚合、lookup、typed 集合运算、分页和 explain。
 - [数据协议完整参考](./protocol-reference)：请求 envelope、typed wire value、幂等、分页与 stream frame。
 - [CLI 完整参考](./cli-reference)：项目检查、代码生成、维护命令、JSON 和稳定退出码。
 - [Rust API 完整参考](./rust-reference)：Engine、prepare/serde、并发、分页与恢复边界。

@@ -19,7 +19,7 @@ select {id, title, state, priority, label}
 take 20
 ```
 
-Stages execute in source order. `filter` changes the row set, `derive` extends the current schema, `select` changes fields visible to later stages, `sort` defines order, and `take`/`page` bounds the result. The planner skips only leading `let` stages and does not reorder work across other stage boundaries.
+Stages execute in source order. `filter` changes the row set, `derive` extends the current schema, `select` changes fields visible to later stages, `union`/`intersect`/`except` combine schema-identical results, `sort` defines order, and `take`/`page` bounds the result. The planner skips only leading `let` stages and does not reorder work across other stage boundaries.
 
 ## Expressions and match
 
@@ -116,6 +116,25 @@ filter exists {
 
 The inner pipeline permits only filters and requires a type-compatible `target.path == outer.path` equality whose target leads a primary or secondary index. A stage accepts at most 10,000 driver rows and stops the target query at the first residual match. Use `filter not exists { ... }` to keep drivers with no matching row. `explain.plan.exists` reports `negated`, the target table, correlation paths, selected index, and limit without executing rows. The first version excludes nested exists, mutation targets, and other inner stages.
 
+## Typed set operations
+
+```text
+from active_tasks
+select {state, tags}
+union {
+  from archived_tasks
+  filter state != Done
+  select {state, tags}
+}
+sort state
+```
+
+`union`, `intersect`, and `except` use braces to delimit an independent right-hand pipeline. Both sides must have exactly the same field names, order, and types at the set stage. Named ADTs compare stable type IDs, so structurally similar types with different names are incompatible and no implicit numeric promotion occurs.
+
+All operators deduplicate complete typed rows, including nested enum payloads, records, tuples, options, and lists. `union` preserves first occurrence across the left then right side. `intersect` and `except` preserve first occurrence on the left. Add an explicit later `sort` when application order matters.
+
+The first version rejects nested set operations and cursor `page` on either side. Filter or take each side before combining, then sort or take the combined result. Both materialized inputs, encoded bytes, and membership state count toward working limits and observe deadline/cancellation. `explain.plan.set_operations` reports the operator, right table, and access plan without reading rows; `explain analyze` merges value-free work observations from both sides.
+
 ## Stable keyset pages
 
 ```text
@@ -131,6 +150,6 @@ Any successful mutation advances sequence and makes an old cursor return `E_CURS
 
 ## Explain and resource budgets
 
-`explain` reports access kind, index lookup, candidate count, source stage order, and result schema without executing rows. `explain analyze` executes the normal read path but returns no business values; it adds stage timings, returned/examined/decoded rows, index entries, redb cache data, batches, and peak working memory.
+`explain` reports access kind, index lookup, candidate count, source stage order, lookup/exists/set-operation subplans, and result schema without executing rows. `explain analyze` executes the normal read path but returns no business values; it adds stage timings, returned/examined/decoded rows, index entries, redb cache data, batches, and peak working memory.
 
 General bounds are 1 MiB / 100,000 tokens / 64 levels of source, 250,000 working rows, 100,000 result rows, a 16 MiB service response, and a default 25-second service deadline. Use indexed filters, small pages/batches, and early projection instead of depending on defensive maxima.

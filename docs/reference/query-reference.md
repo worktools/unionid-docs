@@ -123,7 +123,7 @@ select {id, customer, lines}
 
 Page 后只允许 lookup 与 select。多个 lookup 可顺序组合，但不遍历前一层 list 内部。Lookup 不支持 mutation target，也没有目标侧自定义 sort。
 
-## 有界相关 exists
+## 有界相关 exists 与 not exists
 
 ```text
 from tasks
@@ -134,7 +134,7 @@ filter exists {
 }
 ```
 
-内层只允许 filter，且至少有一个 `target.path == outer.path` 的同型等值条件。目标路径必须是主键或 index 首项。一个 stage 最多接受 10,000 driver rows，目标查询在首个 residual match 处停止。`explain.plan.exists` 返回目标表、相关路径、实际索引和上限，但不执行 row。首版不支持 not/nested exists、mutation target 或其他内层 stage。
+内层只允许 filter，且至少有一个 `target.path == outer.path` 的同型等值条件。目标路径必须是主键或 index 首项。一个 stage 最多接受 10,000 driver rows，目标查询在首个 residual match 处停止。使用 `filter not exists { ... }` 保留没有匹配行的 driver。`explain.plan.exists` 返回 `negated`、目标表、相关路径、实际索引和上限，但不执行 row。首版不支持嵌套 exists、mutation target 或其他内层 stage。
 
 ## Keyset page
 

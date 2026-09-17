@@ -73,7 +73,17 @@ filter exists {
 }
 ```
 
-Ordinary inner paths belong to the target table; `outer.id` explicitly reads the current driver row. At least one type-compatible correlation target must lead an index. The first version permits only inner filters, accepts at most 10,000 drivers, and stops at the first match. `not exists`, nested `exists`, mutation targets, and other inner stages are not supported yet.
+Ordinary inner paths belong to the target table; `outer.id` explicitly reads the current driver row. At least one type-compatible correlation target must lead an index. The first version permits only inner filters, accepts at most 10,000 drivers, and stops at the first match.
+Use `filter not exists { ... }` with the same inner pipeline to keep drivers with no matching target row. This includes drivers with no children and drivers whose children all fail the residual filters. Nested `exists`, mutation targets, and other inner stages remain unsupported.
+
+```text
+from tasks
+filter not exists {
+  from task_items
+  filter task_id == outer.id
+  filter state != Done
+}
+```
 
 ```text
 from tasks

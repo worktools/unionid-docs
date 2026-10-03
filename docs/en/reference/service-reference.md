@@ -43,7 +43,7 @@ For a cancellable stream, the server sends and flushes `accepted` with a server-
 
 ## Graceful shutdown
 
-SIGINT/SIGTERM should stop admission, wake queued work with a shutdown error, cancel active reads at control checkpoints, wait for bounded workers/flushes to a deadline, handle serial writes by certainty rules, emit only value-free final statistics, and then close storage. Embedded applications can connect the same `AtomicBool` flow through `server::serve_until` / `serve_until_concurrent` and receive `ServerStats`.
+SIGINT/SIGTERM should stop admission, wake queued work with a shutdown error, cancel active reads at control checkpoints, wait for bounded workers/flushes to a deadline, handle serial writes by certainty rules, emit only value-free final statistics, and then close storage. When in-service receipt retention is enabled (`--receipt-retention-seconds`), shutdown wakes and joins the worker. A cleanup pass that has already started is not interrupted: it finishes under the ordinary Engine commit-outcome rules before the join returns, and the join has no separate timeout of its own. Embedded applications can connect the same `AtomicBool` flow through `server::serve_until` / `serve_until_concurrent` and receive `ServerStats`.
 
 ## Metrics and observer
 

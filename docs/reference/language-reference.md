@@ -56,6 +56,8 @@ create unique index tasks (owner.email, external_id)
 
 Secondary index 包含 1–16 个字段路径。方向和次序属于索引身份。相同 field tuple 不能同时声明 ordinary 与 unique。unique 比较完整 typed tuple，`None` 不是例外。创建约束前扫描已有行；冲突使 schema、revision 和 index 全部保持不变。
 
+`create unique index <table> (<paths>) if <predicate>` 声明部分唯一索引，只约束 predicate 为 true 的行；predicate 是对当前行的纯 bool 表达式，例如 `is_some email`、`deleted_at == None` 或 `state == Active`。它随 logical backup 与 portable schema 无损携带，需要 storage format 10/11（新库默认 10）。Planner 只在查询的简单 `&&` 过滤机械蕴含 predicate 时使用它，`explain` 输出 `index_predicate`、`predicate_proven` 与 value-free 的 `predicate_rejections`；`fetch_by_key` 不把部分唯一索引当作全表唯一证明。
+
 Planner 可使用连续 equality prefix，加下一个 component 的 range；满足剩余连续前缀的 sort 可正向或整体反向遍历。range 后、key gap 后和 stage 边界后的条件仍作为 residual filter。
 
 ## 值语法
@@ -98,6 +100,10 @@ struct Asset {
 
 时间转换只能使用显式 `date_parse`、`timestamp_parse`、`duration_parse`。Decimal text 使用 `decimal_parse old P S`，改变 scale/precision 使用 `decimal_rescale old P S`；丢弃非零位返回 `E_DECIMAL_RANGE`。
 
+## Typed map
+
+`Map<text, T>` 字面量写作 `map {"key": value}`，空 map 为 `map {}`。key 必须是 text，重复 key 被拒绝；比较、排序与持久化使用 UTF-8 key 字节的规范顺序，与书写顺序无关。查询函数为 `contains_key`、`get`、`keys`、`values`、`entries` 与 `length`，并可交给有界的 `any`/`all`。map 受条目数、字节与深度预算约束，需要 storage format 8 及以上（新库默认 10）。不支持动态字段路径、map 模式解构、merge、按 key 原地更新或 keyed secondary index。
+
 ## 有限递归
 
 ```text
@@ -115,13 +121,14 @@ enum Tree {
 
 `$name` 由 prepared Rust API 或 versioned protocol 绑定到 AST，不做文本替换。缺少、多余和 wire 解码错误分别返回 `E_PARAM_MISSING`、`E_PARAM_EXTRA`、`E_PARAM_TYPE`；上下文类型不匹配返回 `E_TYPE`。
 
-一次脚本中的 schema、数据和 ledger 变化共享一个候选状态与提交。任一语句失败，之前语句也不发布。ledger 非空后普通脚本不能绕过 migration runner 修改 schema。
+一次脚本中的 schema、数据和 ledger 变化共享一个候选状态与提交。任一语句失败，之前语句也不发布。DML 后可紧跟 `expect affected <op> <n>`（`== != < <= > >=`，非负整数常量）；不满足时返回 `E_EXPECTATION` 并回滚整个脚本，错误携带从 1 开始的 `statement_index`。守卫位置不合法时在执行前返回 `E_EXPECTATION_CONTEXT`。一个脚本最多 4,096 条顶层语句。ledger 非空后普通脚本不能绕过 migration runner 修改 schema。
 
 ## 格式化与输入状态
 
 ```bash
 unionid fmt --file file.unid
-unionid fmt --check --file file.unid
+unionid fmt --check schema.unid queries/*.unid
+unionid fmt --write schema.unid queries/*.unid
 ```
 
 formatter 输出固定的无分号布局，保留理解 precedence 所需括号，并保证 parse/format 幂等。REPL 与编辑器可使用同一 parser 驱动的 `complete` / `incomplete` / `invalid` 判断，避免靠空行猜测语句结束。

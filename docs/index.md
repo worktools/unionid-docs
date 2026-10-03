@@ -15,10 +15,10 @@ hero:
 
 features:
   - title: Schema 直接表达业务状态
-    details: record、sum、option、list、tuple 与有限递归类型都有稳定身份、默认值、约束和迁移语义。
+    details: record、sum、option、list、tuple、typed map 与有限递归类型都有稳定身份、默认值、约束和迁移语义，并支持部分唯一索引。
     link: /language/data-model
   - title: Query 直接理解 ADT
-    details: pipeline、穷尽 match、derive、聚合、复合索引、稳定分页和 explain 共用同一类型系统。
+    details: pipeline、穷尽 match、derive、聚合、排名窗口、稳定分页、explain 与 `expect` 业务守卫共用同一类型系统。
     link: /language/queries
   - title: 从开发到生产
     details: CLI、Rust、TCP/HTTP 共用 Engine，并提供备份、可恢复迁移、检查、压缩、指标和受控网络边界。

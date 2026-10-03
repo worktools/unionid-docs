@@ -10,6 +10,8 @@ Unionid 二进制内置一份与自身版本匹配的紧凑语言参考和可运
 2. **目标数据库的 exact schema**：`unionid schema print --db <db> --format json`；
 3. **本次业务需求**：所需筛选、投影、排序、上限，以及是否允许 mutation。
 
+需要让 agent 先了解命令面和错误码时，再加上 `unionid agent --format json`：它列出稳定命令、错误契约字段、错误码词汇表、constraint hint 和退出码分类，不打开数据库。
+
 内置参考不会包含业务数据、数据库路径、cursor secret 或 receipt。`schema print` 提供表、字段、ADT variant、主键和索引，避免模型发明 SQL 表或 JSON 字段。
 
 ```bash
@@ -23,7 +25,7 @@ unionid schema print --db app.redb --format json > schema.json
 ```json
 {
   "schema_version": 1,
-  "software_version": "0.6.0",
+  "software_version": "0.13.2",
   "language_version": "0.7",
   "topic": "query",
   "reference": "# Unionid query language for LLMs\n...",
@@ -76,11 +78,13 @@ mutation 应额外经过人工或应用策略审核，并通过只读环境或�
 
 ## 内置示例
 
-JSON bundle 中提供三份规范化、可执行源码：
+JSON bundle 中提供五份规范化、可执行源码：
 
 - `adt-query`：声明 ADT、写入 enum、match、derive、sort 和 projection；
 - `nested-values`：嵌套 record、Option、enum payload、List 和箭头闭包；
-- `mutation`：同时求值的 typed set、ADT 状态转换和 returning。
+- `mutation`：同时求值的 typed set、ADT 状态转换和 returning；
+- `set-operations`：同形结果的 typed union、intersect 与 except；
+- `atomic-claim`：带版本条件的领取操作，用 `expect affected == 1` 保证整体回滚。
 
 源码 checkout 和 release archive 也在 `examples/llm/` 保存同一批 `.unid` 文件。它们由测试实际执行，并检查 formatter 幂等，防止示例与语言实现漂移。
 

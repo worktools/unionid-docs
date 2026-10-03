@@ -71,6 +71,31 @@ sort {queue, position}
 
 A window is bounded by 250,000 working rows, 64 MiB working state, and 256 output fields. Frames, `lag`, `lead`, window aggregates, and cursor `page` composition are not supported yet.
 
+## Typed maps
+
+`Map<text, T>` provides these pure functions:
+
+| Expression | Result | Meaning |
+| --- | --- | --- |
+| `contains_key attributes "plan"` | `bool` | whether the key exists |
+| `get attributes "plan"` | `Option<T>` | the value, or `None` when missing |
+| `keys attributes` | `List<text>` | keys in canonical order |
+| `values attributes` | `List<T>` | values in canonical key order |
+| `entries attributes` | `List<(text, T)>` | key/value tuples in canonical order |
+| `length attributes` | `int` | entry count |
+
+```text
+from accounts
+filter contains_key attributes "plan"
+derive {
+  plan = get attributes "plan"
+  attribute_keys = keys attributes
+}
+select {id, plan, attribute_keys}
+```
+
+The resulting lists compose with `contains`, `any/all`, derive, and match.
+
 ## Pagination and explain
 
 Bounded lookup places complete typed rows from a target table into a list field on each driver row:

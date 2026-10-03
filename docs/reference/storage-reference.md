@@ -40,7 +40,7 @@ RowId 是表内单调 `u64`：删除产生的缺口合法且不会复用。应�
 
 ## Shadow migration 状态机
 
-format-6 大迁移使用 shadow generation。`Building` 期间读取继续来自旧 generation，普通写入被阻止；达到 `Ready` 后原子 cutover；`Reclaimable` 只剩旧逻辑 key 回收。每个 `advance` step 都是已提交 action，进程重启后可从 durable maintenance state 继续。
+format 6 及之后的大迁移使用 shadow generation。`Building` 期间读取继续来自旧 generation，普通写入被阻止；达到 `Ready` 后原子 cutover；`Reclaimable` 只剩旧逻辑 key 回收。每个 `advance` step 都是已提交 action，进程重启后可从 durable maintenance state 继续。
 
 `abort` 仅能撤销允许回退的 building 状态。cutover 后不能假装回到旧 schema。shadow generation 有 1 GiB logical cap；超过上限应拆分迁移或扩大维护方案，而不是绕过预算。单步 delay 最长 60 秒，调用方必须设置外部监督和 deadline。
 
@@ -56,7 +56,7 @@ generation reclaim 只删除旧逻辑 key，不保证 redb 文件缩小；物理
 
 ## 增量备份协议
 
-增量 archive codec 1 由 baseline、manifest、连续 segment 和源 journal 组成。`init` 从独占打开且完整检查的 committed view 写出并重读 baseline，再发布 prepared manifest，最后同步启用 journal 和 active manifest。该动作是 format 6 → 7 的显式授权。
+增量 archive codec 1 由 baseline、manifest、连续 segment 和源 journal 组成。`init` 从独占打开且完整检查的 committed view 写出并重读 baseline，再发布 prepared manifest，最后同步启用 journal 和 active manifest。该动作是进入 journal 格式（format 6 → 7、8 → 9、10 → 11）的显式授权。
 
 `export` 仅导出完整连续 commit：先发布不可变 segment，再原子更新 manifest，最后裁剪源 journal。默认 segment 边界为 1000 commits 或 64 MiB。中断后的重复 journal 可在下一次 export 对账裁剪；未被 manifest 引用的文件由 `verify` 报告为 orphan。
 

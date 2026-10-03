@@ -60,6 +60,8 @@ SIGINT/SIGTERM 应驱动共享 shutdown：
 5. 串行写/maintenance 完成或按结果不确定规则进入重开检查。
 6. 输出不含业务数据的最终统计并关闭数据库。
 
+开启了服务内回执保留（`--receipt-retention-seconds`）时，关闭会唤醒并等待维护线程。已经开始的清理轮次不会被打断，它按 Engine 通常的提交结果规则完成后，等待才会返回；这个等待本身没有单独的超时。
+
 嵌入式服务可用 `server::serve_until` / `serve_until_concurrent` 连接同样的 `AtomicBool` shutdown，并在返回时读取 `ServerStats`。
 
 ## 指标

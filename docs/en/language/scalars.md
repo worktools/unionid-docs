@@ -13,7 +13,17 @@
 | `duration` | `30seconds` | exact integer unit |
 | `decimal P S` | `decimal "19.90"` | precision 1..38, never implicit rounding |
 
-Integer, float, duration, and same-type decimal operations are checked. Overflow, division by zero, or non-finite floats return `E_ARITH`. Decimal currently supports addition, subtraction, negation, and sum—not multiplication, division, average, or rounding.
+Integer, float, duration, and same-type decimal operations are checked. Overflow, division by zero, or non-finite floats return `E_ARITH`. Values of the same `decimal P S` type support `+`, `-`, negation, and `sum` directly. Operations that may change scale name the result type and rounding mode explicitly; plain `*` and `/` never infer a decimal result:
+
+```text
+derive {
+  fee = decimal_mul amount (decimal "0.015") 12 2 "half_even"
+  share = decimal_div amount (decimal "3") 12 2 "toward_zero"
+  rounded = decimal_round amount 12 0 "half_up"
+}
+```
+
+`aggregate {avg_amount = decimal_avg amount 12 2 "half_even"}` averages with the same rules. Modes are `exact`, `toward_zero`, `away_from_zero`, `floor`, `ceil`, `half_up`, and `half_even`; `exact` fails when rounding would be needed. Convert legacy text with `decimal_parse` and change scale exactly with `decimal_rescale`.
 
 `timestamp ± duration` returns a timestamp and `timestamp - timestamp` returns a duration. Dates do not consult a clock or local timezone.
 

@@ -13,14 +13,38 @@
 
 ```bash
 unionid run --db app.redb --file app.unid
+unionid run --db app.redb -q 'from tasks | take 10'
 unionid cli --db app.redb
 unionid server --db app.redb --addr 127.0.0.1:7419
 unionid cli --addr 127.0.0.1:7419
 ```
 
-`run` 执行文件中的一个原子脚本。`cli` 不带脚本时进入 REPL；本地模式直接打开数据库，远程模式使用 version 1 请求协议。生产服务需要只读副本时，给相应入口传入 `--read-only`；解析和绑定仍会执行，但 mutation 在候选状态或持久事务产生前返回 `E_READ_ONLY`。
+`run` 执行 `--file` 或 `-q/--query` 给出的一个原子脚本；不带 `--db` 时在全新的内存数据库中运行。`cli` 不带脚本时进入 REPL；本地模式直接打开数据库，远程模式使用 version 1 请求协议。生产服务需要只读副本时，给相应入口传入 `--read-only`；解析和绑定仍会执行，但 mutation 在候选状态或持久事务产生前返回 `E_READ_ONLY`。
 
 REPL 的 `.tables`、`.types`、`.schema`、`.storage` 使用共享 introspection，因此 memory、redb 和 TCP 模式的含义一致。未完成输入不会因空行或 EOF 被误提交。
+
+## 本地 Parquet
+
+```bash
+unionid parquet events.parquet
+unionid parquet events.parquet --limit 0 --format json
+unionid parquet people.parquet --query 'from data | filter active | select {id, name}'
+unionid parquet people.parquet --interactive
+```
+
+只读打开单个本地文件，不创建数据库。默认显示 schema、行数、row group 与前 20 行（`--limit` 最多 1,000）；`--query` 与 `--interactive` 把文件作为请求内只读表 `data` 执行 typed pipeline。查询按最多 1,024 行、16 MiB 的 source batch 扫描并下推顶层列投影，超大单行会被拒绝。
+
+## 内置文档与 agent 清单
+
+```bash
+unionid docs
+unionid docs list --category language --format json
+unionid docs show query
+unionid docs query --format json
+unionid agent --format json
+```
+
+`docs` 输出与二进制版本匹配的离线文档；`agent` 输出 version 1 能力清单，包括命令用法、错误码词汇表、constraint hint 与退出码分类。两者都不访问网络、不打开数据库。
 
 ## 项目骨架与整体验证
 
@@ -35,10 +59,11 @@ unionid project check --dir tasks
 
 ```bash
 unionid fmt --file app.unid
-unionid fmt --check --file app.unid
+unionid fmt --check schema.unid queries/a.unid queries/b.unid
+unionid fmt --write schema.unid queries/a.unid queries/b.unid
 ```
 
-formatter 以 parser 为准，输出无分号的规范布局，并保留表达式优先级需要的括号。CI 应使用 `fmt --check`；成功意味着 parse/format 幂等，不代表 schema 能在目标数据库上应用。
+`fmt` 接受多个位置参数或重复的 `--file`。只给一个文件且不带 flag 时输出到 stdout；`--check` 在任一文件不规范时返回非零；`--write` 先校验整批文件，全部成功后才改写。不要改写已经应用的 migration，checksum 不可变。formatter 以 parser 为准，输出无分号的规范布局，并保留表达式优先级需要的括号。CI 应使用 `fmt --check`；成功意味着 parse/format 幂等，不代表 schema 能在目标数据库上应用。
 
 ## Schema 工具
 
@@ -67,14 +92,14 @@ unionid query rust --schema schema.unid --dir queries --output src/queries.rs
 
 ```bash
 unionid migration status --db app.redb --dir migrations
-unionid migration plan --db app.redb --dir migrations
-unionid migration apply --db app.redb --dir migrations
+unionid migration plan --db app.redb --dir migrations --queries queries
+unionid migration apply --db app.redb --dir migrations --queries queries
 unionid migration advance --db app.redb --dir migrations --max-steps 100
 unionid migration abort --db app.redb
-unionid migration rehearse --db app.redb --dir migrations
+unionid migration rehearse --db app.redb --dir migrations --queries queries --copy rehearsal.redb
 ```
 
-`plan` 不写入；`apply` 尝试完成迁移；format-6 shadow migration 可用 `advance` 在每次已提交 maintenance action 后返回。`abort` 只处理允许回退的 building 状态，不会倒退已 cutover 的 schema。`rehearse` 在私有副本上演练，不把结果写回原数据库。
+`plan` 不写入；`apply` 尝试完成迁移；format 6 及之后的 shadow migration 可用 `advance` 在每次已提交 maintenance action 后返回。`abort` 只处理允许回退的 building 状态，不会倒退已 cutover 的 schema。`rehearse` 在私有副本上演练，不把结果写回原数据库；`--copy` 指定一个不存在的路径来保留副本。`--queries <dir>` 在目标 schema 上静态绑定已保存的查询，任何查询失效都以 `E_MIGRATION`（退出码 3）拒绝，`apply` 不会提交任何 migration。
 
 ## 完整性、升级与压缩
 
@@ -96,7 +121,12 @@ unionid receipts prune --db app.redb --through-sequence 12000 --max-receipts 500
 unionid receipts prune --db app.redb --through-sequence 12000 --max-receipts 500 --confirm
 ```
 
-prune 默认仅预览；只有 `--confirm` 才在原子提交中删除。也可按时间 cutoff 规划。回执是 exactly-once effect 的持久组成，不应作为普通缓存随意清空。
+```bash
+unionid receipts retain --db app.redb --min-age-seconds 86400 --max-receipts 1000
+unionid receipts retain --db app.redb --min-age-seconds 86400 --max-receipts 1000 --confirm
+```
+
+prune 与 retain 默认仅预览；只有 `--confirm` 才在原子提交中删除。retain 按 UTC 完成时间选择早于窗口的回执，每轮最多 1,000 条；`server --receipt-retention-seconds` 可在服务内周期执行同样的清理，默认关闭。回执是 exactly-once effect 的持久组成，不应作为普通缓存随意清空。
 
 ## 增量备份
 
@@ -108,7 +138,7 @@ unionid backup incremental verify --repo backup-repo
 unionid restore incremental --repo backup-repo --db restored.redb
 ```
 
-`init` 是启用 journal 以及将 format 6 显式升级到 7 的授权。`export` 只发布完整连续 commit。恢复目标必须是新路径；还原后会获得新的数据库/cursor identity。
+`init` 是启用 journal 以及显式进入 journal 格式（6 → 7、8 → 9、10 → 11）的授权。`export` 只发布完整连续 commit。恢复目标必须是新路径；还原后会获得新的数据库/cursor identity。
 
 ## 稳定退出码
 

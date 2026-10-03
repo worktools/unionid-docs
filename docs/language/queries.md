@@ -83,6 +83,31 @@ sort {queue, position}
 
 窗口 stage 受 250,000 working rows、64 MiB working state 和最多 256 个输出字段限制。当前不支持 frame、`lag`、`lead`、窗口 aggregate 或与 cursor `page` 组合。
 
+## Typed map
+
+`Map<text, T>` 提供以下纯函数：
+
+| 表达式 | 结果 | 语义 |
+| --- | --- | --- |
+| `contains_key attributes "plan"` | `bool` | key 是否存在 |
+| `get attributes "plan"` | `Option<T>` | 取值，缺少 key 时为 `None` |
+| `keys attributes` | `List<text>` | 按规范顺序返回 key |
+| `values attributes` | `List<T>` | 按规范顺序返回 value |
+| `entries attributes` | `List<(text, T)>` | 按规范顺序返回 key/value tuple |
+| `length attributes` | `int` | 条目数 |
+
+```text
+from accounts
+filter contains_key attributes "plan"
+derive {
+  plan = get attributes "plan"
+  attribute_keys = keys attributes
+}
+select {id, plan, attribute_keys}
+```
+
+返回的 list 可以继续交给 `contains`、`any/all`、derive 或 match 使用。
+
 ## Lookup 与分页
 
 有界 lookup 把目标表的完整 typed row 放进当前行的 list 字段，适合订单/明细等一对多读取：

@@ -23,7 +23,7 @@ Stages execute in source order. `filter` changes the row set, `derive` extends t
 
 ## Expressions and match
 
-Expressions include field paths, bindings, parameters, typed literals and constructors, checked arithmetic, comparisons, boolean operators, option helpers, `contains`, `length`, bounded `any/all`, and non-recursive local functions.
+Expressions include field paths, bindings, parameters, typed literals and constructors, checked arithmetic, comparisons, boolean operators, option helpers, `contains`, `length`, bounded `any/all`, and non-recursive local functions. Decimal multiplication, division, and rounding name the result type and rounding mode: `decimal_mul`, `decimal_div`, `decimal_round`, `decimal_rescale`. Typed maps use `contains_key`, `get`, `keys`, `values`, and `entries`.
 
 ```text
 filter {
@@ -86,7 +86,7 @@ Projection order is response-column order. Duplicate or unknown fields fail even
 
 ## Aggregation
 
-Ungrouped `aggregate` and `group ... { aggregate {...} }` support count, count_distinct, avg, sum, min, and max. On empty input, count/count_distinct are 0, sum is the numeric zero of its input type, and avg/min/max return `Option<T>`. An integer average specifically returns `Option<float>`; float and duration averages preserve named input types. Decimal average returns `E_TYPE`. Complete ADTs may be group keys or count_distinct inputs. Without an explicit sort, group order is unspecified.
+Ungrouped `aggregate` and `group ... { aggregate {...} }` support count, count_distinct, avg, sum, min, and max. On empty input, count/count_distinct are 0, sum is the numeric zero of its input type, and avg/min/max return `Option<T>`. An integer average specifically returns `Option<float>`; float and duration averages preserve named input types. Plain `avg` on decimals returns `E_TYPE`; write `decimal_avg amount P S "mode"` instead, which returns `Option<decimal P S>`. Complete ADTs may be group keys or count_distinct inputs. Without an explicit sort, group order is unspecified.
 
 Limits are 256 aggregate outputs, 100,000 groups, 1,000,000 accumulator cells, 64 MiB estimated group state, 250,000 working rows, and 100,000 result rows. Typed count_distinct keys count toward group state. Exceeding a limit returns `E_LIMIT`.
 

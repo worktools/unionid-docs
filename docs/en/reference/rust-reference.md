@@ -76,10 +76,21 @@ unionid query rust --schema schema.unid --dir queries --output src/queries.rs
 
 Generated query code checks schema identity before prepare. `PortableContract::validate_type` reuses prepared-binding rules for input validation. Stable IDs are comparable only within one database lineage, never as global cross-project identifiers.
 
+## Inline query macro
+
+`unionid_query::queries! { schema "schema.unid" query name { ... } }` reads the schema at compile time and reuses the parser, binder, static contract, and code generator to emit `name::NameParams`, result rows, and `name::name(&mut engine, params)` for each query. `unionid-query` must match the exact `unionid` version. The macro never opens redb while compiling and still checks schema revision/hash at runtime; applications that need the live catalog keep using `query rust --db`.
+
+## Migration preflight and receipt retention
+
+- `Engine::plan_migrations_with_queries` / `apply_migrations_with_queries` take `MigrationFile` values plus `migration::query_validation::MigrationQuery { path, source }` values and bind the queries against the target catalog; apply repeats the preflight before its first commit and returns `MigrationQueryError` on failure.
+- `ReceiptRetentionPolicy { min_age_seconds, max_receipts }` with `Engine::plan_idempotency_retention` / `apply_idempotency_retention` runs one UTC-age cleanup pass; `ConcurrentEngine::start_receipt_retention(schedule, shutdown)` returns a `ReceiptRetentionWorker` for scheduled cleanup, one per shared Engine.
+- A failed business guard sets `Error.statement_index`, and successful responses carry `statements` summaries. Code that builds `Error` or status/metrics structs with literals must initialize the added fields.
+
 ## Recovery boundary
 
 - Failure before commit: definitely rolled back; bounded retry is possible.
 - Error returned by redb commit: result is uncertain; the Engine closes and blocks further writes. Reopen and fully check.
 - `E_BUSY`: another writer/maintenance owner exists; use bounded backoff.
 - `E_SCHEMA_CHANGED`: regenerate or prepare again; never bypass it.
+- `E_EXPECTATION`: a business guard failed and the script rolled back; refresh business state or version, then retry the whole script.
 - `E_READ_ONLY`: routing or deployment policy; retrying the same instance is wrong.

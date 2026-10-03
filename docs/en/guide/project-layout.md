@@ -16,7 +16,7 @@ tasks/
 1. Edit `schema.unid` to describe the target structure.
 2. Generate a migration draft with `migration diff`.
 3. Replace every rename or conversion `todo` with explicit operations.
-4. Run project check, migration plan, and application queries.
+4. Run project check, then `migration plan --queries queries` to confirm saved queries still bind against the new schema.
 5. Back up and rehearse on a copy before the production window.
 
 ```bash
@@ -24,7 +24,7 @@ unionid schema check --file schema.unid
 unionid migration diff --db data/tasks.redb \
   --schema schema.unid --name add_priority
 unionid project check --dir .
-unionid migration plan --db data/tasks.redb --dir migrations
+unionid migration plan --db data/tasks.redb --dir migrations --queries queries
 ```
 
 `.unid` is canonical. `.uid` remains readable during the pre-1.0 compatibility window but prints a deprecation. Migration checksums cover content, not paths, so renaming the extension does not reapply history.

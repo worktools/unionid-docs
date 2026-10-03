@@ -10,6 +10,8 @@ A reliable generation request supplies all three:
 2. **The exact target schema** from `unionid schema print --db <db> --format json`;
 3. **The business request**, including filters, projection, order, bounds, and whether mutation is allowed.
 
+When an agent should first learn the command surface and error codes, add `unionid agent --format json`: it lists stable commands, error-contract fields, the error-code vocabulary, constraint hints, and exit classes without opening a database.
+
 The bundled reference contains no business rows, database path, cursor secret, or receipt. `schema print` supplies the tables, fields, ADT variants, keys, and indexes so the model does not invent SQL tables or JSON fields.
 
 ```bash
@@ -23,7 +25,7 @@ The default output is Markdown with stable front matter and can be placed direct
 ```json
 {
   "schema_version": 1,
-  "software_version": "0.6.0",
+  "software_version": "0.13.2",
   "language_version": "0.7",
   "topic": "query",
   "reference": "# Unionid query language for LLMs\n...",
@@ -76,11 +78,13 @@ Mutations need an additional human or application-policy review and should be re
 
 ## Bundled examples
 
-The JSON bundle provides three canonical executable programs:
+The JSON bundle provides five canonical executable programs:
 
 - `adt-query`: define ADTs, insert an enum, match, derive, sort, and project;
 - `nested-values`: nested records, options, enum payloads, lists, and arrow closures;
-- `mutation`: simultaneous typed assignments, an ADT state transition, and returning.
+- `mutation`: simultaneous typed assignments, an ADT state transition, and returning;
+- `set-operations`: typed union, intersect, and except over same-shaped results;
+- `atomic-claim`: a version-checked claim guarded by `expect affected == 1` so the script rolls back as a whole.
 
 Source checkouts and release archives contain the same `.unid` files under `examples/llm/`. Tests execute them and assert formatter idempotence, preventing drift between examples and the language implementation.
 

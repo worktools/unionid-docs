@@ -4,9 +4,10 @@ Every entry point reaches the same `Engine` semantics. Choose by process boundar
 
 | Entry point | Strength | Responsibility |
 | --- | --- | --- |
-| CLI / REPL | fastest learning and operations | files and exit classes |
+| CLI / REPL | fastest learning and operations, including local Parquet | files and exit classes |
 | LLM / generator | version-matched rules, schema, and static binding | validate source and review mutations |
 | Rust Engine | no network, typed serde, lowest overhead | application owns lifecycle |
+| Rust `queries!` macro | compile-time checked queries with typed functions | matching crate versions; recompile after schema changes |
 | TCP JSON Line | simple process boundary | connections, deadline, TLS gateway |
 | HTTP adapter | natural auth and async integration | route authorization and identity |
 

@@ -18,7 +18,7 @@ tasks/
 1. 修改 `schema.unid` 表达目标结构。
 2. 用 `migration diff` 生成草稿。
 3. 补全 rename 或 `using old -> ...` 数据转换，不保留任何 `todo`。
-4. 运行 `project check`、`migration plan` 和应用查询。
+4. 运行 `project check`，再用 `migration plan --queries queries` 确认已保存的查询在新 schema 上仍然有效。
 5. 在副本上备份、应用、检查，再进入生产维护窗口。
 
 ```bash
@@ -26,7 +26,7 @@ unionid schema check --file schema.unid
 unionid migration diff --db data/tasks.redb \
   --schema schema.unid --name add_priority
 unionid project check --dir .
-unionid migration plan --db data/tasks.redb --dir migrations
+unionid migration plan --db data/tasks.redb --dir migrations --queries queries
 ```
 
 ## 文件约定
@@ -36,7 +36,7 @@ unionid migration plan --db data/tasks.redb --dir migrations
 source 不使用分号。`unionid fmt` 输出固定布局；CI 建议运行：
 
 ```bash
-unionid fmt --check --file schema.unid
+unionid fmt --check schema.unid migrations/*.unid queries/*.unid
 unionid project check --dir .
 ```
 

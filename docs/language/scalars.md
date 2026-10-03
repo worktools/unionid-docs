@@ -17,7 +17,19 @@
 
 ## 算术
 
-`int`、`float`、duration 和同类型 decimal 支持 checked 运算；溢出、除零或非有限 float 返回 `E_ARITH`。decimal 当前支持加、减、负号和 sum，不支持乘除、avg 或舍入。
+`int`、`float`、duration 和同类型 decimal 支持 checked 运算；溢出、除零或非有限 float 返回 `E_ARITH`。
+
+同一个 `decimal P S` 类型之间可直接使用 `+`、`-`、一元负号和 `sum`。可能改变 scale 的运算必须写出结果类型和舍入模式，普通 `*`、`/` 不会推断 decimal 结果：
+
+```text
+derive {
+  fee = decimal_mul amount (decimal "0.015") 12 2 "half_even"
+  share = decimal_div amount (decimal "3") 12 2 "toward_zero"
+  rounded = decimal_round amount 12 0 "half_up"
+}
+```
+
+`aggregate {avg_amount = decimal_avg amount 12 2 "half_even"}` 用同样规则求平均。舍入模式为 `exact`、`toward_zero`、`away_from_zero`、`floor`、`ceil`、`half_up` 或 `half_even`；`exact` 在需要舍入时返回错误。旧 text 数据用 `decimal_parse`，精确改变 scale 用 `decimal_rescale`。
 
 ```text
 derive total = price + tax

@@ -90,10 +90,21 @@ unionid query rust --schema schema.unid --file queries/find.unid --output src/fi
 
 `PortableContract::validate_type` 使用 prepared binding 同一验证规则，适合在接收网络输入后、调用 Engine 前验证命名类型。稳定 ID 只在同一数据库 lineage 内比较；不要把它当跨项目的全局 ID。
 
+## 内联查询宏
+
+`unionid_query::queries! { schema "schema.unid" query name { ... } }` 在编译期读取 schema，复用同一 parser、binder、静态契约与 codegen，为每个查询生成 `name::NameParams`、结果 row 与 `name::name(&mut engine, params)` 函数。`unionid-query` 必须与 `unionid` 使用同一精确版本。宏不在编译时打开 redb，运行时仍核对 schema revision/hash；需要 live catalog 的应用继续使用 `query rust --db`。
+
+## 迁移查询预检与回执保留
+
+- `Engine::plan_migrations_with_queries` / `apply_migrations_with_queries` 接受 `MigrationFile` 列表与 `migration::query_validation::MigrationQuery { path, source }` 列表，在目标 catalog 上静态绑定查询；apply 在第一次提交前重新预检，失败返回 `MigrationQueryError`。
+- `ReceiptRetentionPolicy { min_age_seconds, max_receipts }` 配合 `Engine::plan_idempotency_retention` / `apply_idempotency_retention` 执行单轮按 UTC 年龄清理；`ConcurrentEngine::start_receipt_retention(schedule, shutdown)` 返回服务内周期清理的 `ReceiptRetentionWorker`，同一共享 Engine 只允许一个 worker。
+- 业务守卫失败时 `Error` 带 `statement_index`，成功响应带 `statements` 摘要；直接写 struct literal 构造 `Error` 或 status/metrics 类型的代码需要补齐新增字段。
+
 ## 错误恢复边界
 
 - commit 前失败：确定回滚，可以按业务策略重试。
 - redb commit 返回错误：结果不确定，Engine 会关闭句柄并阻止继续写；必须重开并完整检查。
 - `E_BUSY`：另一 writer/maintenance 持有数据库，采用有界退避。
 - `E_SCHEMA_CHANGED`：重新生成/prepare，不要绕过校验。
+- `E_EXPECTATION`：业务守卫不满足，整个脚本已回滚；刷新业务状态或版本后再整体重试。
 - `E_READ_ONLY`：路由错误或部署策略生效，不应重试到同一实例。

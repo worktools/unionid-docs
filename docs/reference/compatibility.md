@@ -23,10 +23,14 @@ Rust 风格语法是面向 v0.7 的源码 breaking change：`struct`/`enum`、`n
 
 `take start..end` 现在是半开区间，`take start..=end` 才包含末端。旧源码需要人工检查范围；其他语法可先用对应版本的 `unionid fmt` 迁移，再提交格式化结果和重新生成的 binding digest。
 
+## Crate 版本
+
+`unionid`、`unionid-derive` 与 `unionid-query` 同步发布，依赖时使用同一个精确版本，例如 `=0.13.2`，不支持混用。
+
 ## Protocol
 
 v1 支持基础 scalar/ADT；v2 支持生产 scalar。server 对未知版本和有损表示明确失败。stream protocol 单独版本化。
 
 ## Storage
 
-当前 binary 只承诺读取 release contract 列出的格式。启用 incremental backup 会显式进入 format 7；旧 binary 将拒绝打开。logical backup/restore 是跨内部格式和回退验证的首选边界。
+当前 binary 只承诺读取 release contract 列出的格式。v0.13.2 读取 storage format 1–11，新数据库默认创建为 format 10；logical backup 当前为 format 6，可读 1–6；protocol 为 1/2，stream protocol 为 1。启用 incremental backup 会显式进入对应 journal 格式（6 → 7、8 → 9、10 → 11）；旧 binary 将拒绝打开。logical backup/restore 是跨内部格式和回退验证的首选边界。

@@ -9,6 +9,19 @@
 3. 保留旧 binary、release archive 和 checksum。
 4. 在静止数据库副本上执行新 binary 的 doctor、check、migration plan 与业务读写。
 
+## v0.8 之后的版本要点
+
+| 版本 | 用户可见变化 | 升级动作 |
+| --- | --- | --- |
+| v0.9 | 新增 `unionid-query` 与内联 `queries!` 宏 | 三个 crate 使用同一精确版本 |
+| v0.10 | typed map、decimal 乘除与显式舍入、部分唯一索引；新库默认 storage format 10 | 旧 format 6/7 库需要 `upgrade --target 8/10`（或 9/11）后才能声明 map 或部分唯一索引；直接构造 `Error {..}` 的代码补 `constraint: None` |
+| v0.11 | `unionid parquet` 本地只读查看；`project check` 比较声明结构；可选邮箱唯一性示例 | 无格式升级 |
+| v0.12 | `expect affected` 业务守卫与逐语句 `statements` 摘要 | 直接构造 `Error` 的代码补 `statement_index`；带守卫脚本不支持旧 WAL 模式 |
+| v0.13 | migration `--queries` 预检、回执保留策略、批量 `fmt --write`、生成源码规范化 | 无格式升级；不要重新格式化已应用的 migration；手写 status/metrics struct literal 需补新字段 |
+| v0.13.1 / v0.13.2 | 修复启用增量备份时 migration 的恢复问题，以及当前目录增量恢复路径 | 兼容补丁，无需额外升级 |
+
+v0.13.2 的默认 storage format 为 10，可读 1–11；logical backup 为 6，可读 1–6；protocol 1/2，stream 1。v0.10 之后的版本均未改变这些版本号。
+
 ## 显式格式升级
 
 只有 release contract 声明可读当前格式时才能打开生产文件。格式转换必须逐级、显式执行，例如旧 format 1 路径：
@@ -34,4 +47,4 @@ unionid check --db rehearsal.redb
 
 ## 生成客户端
 
-使用静态 query binding 的应用在升级后应重新运行 `query rust`，提交新生成物与 digest，并重新编译。protocol v1 保持基础值兼容；生产 scalar 需要 v2。
+使用静态 query binding 的应用在升级后应重新运行 `query rust`，提交新生成物与 digest，并重新编译。使用 `queries!` 宏时，同步把 `unionid` 与 `unionid-query` 升到同一精确版本。protocol v1 保持基础值兼容；生产 scalar 需要 v2。

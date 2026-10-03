@@ -23,7 +23,7 @@ stage 严格按源码顺序：`filter` 改变 row 集合；`derive` 扩充当前
 
 ## 表达式
 
-支持字段/嵌套路径、binding、参数、typed literal、constructor、算术、比较、bool operator、Option helper、`contains`、`length`、`any/all` 与非递归局部函数。
+支持字段/嵌套路径、binding、参数、typed literal、constructor、算术、比较、bool operator、Option helper、`contains`、`length`、`any/all` 与非递归局部函数。decimal 的乘除与舍入使用显式结果类型和舍入模式：`decimal_mul`、`decimal_div`、`decimal_round`、`decimal_rescale`；typed map 使用 `contains_key`、`get`、`keys`、`values`、`entries`。
 
 ```text
 filter {
@@ -104,7 +104,7 @@ filter count > 0
 sort {-count, owner}
 ```
 
-未分组 `aggregate` 与 `group ... { aggregate {...} }` 支持 count、count_distinct、avg、sum、min 和 max。`count` 与 `count_distinct` 空输入为 0，`sum` 使用输入数值类型的零，avg/min/max 返回 `Option<T>`。`avg int` 的具体输出是 `Option<float>`；float/duration avg 保留命名类型。decimal avg 返回 `E_TYPE`。Group key 与 count_distinct 输入可为完整 ADT，未 sort 时不承诺组顺序。
+未分组 `aggregate` 与 `group ... { aggregate {...} }` 支持 count、count_distinct、avg、sum、min 和 max。`count` 与 `count_distinct` 空输入为 0，`sum` 使用输入数值类型的零，avg/min/max 返回 `Option<T>`。`avg int` 的具体输出是 `Option<float>`；float/duration avg 保留命名类型。decimal 不能直接用 `avg`（返回 `E_TYPE`），需写成 `decimal_avg amount P S "mode"`，结果为 `Option<decimal P S>`。Group key 与 count_distinct 输入可为完整 ADT，未 sort 时不承诺组顺序。
 
 限制：最多 256 aggregate 输出、100,000 groups、1,000,000 accumulator cells、64 MiB 估算 group state、250,000 working rows、100,000 result rows。count_distinct 的 typed 去重键计入 group state。超限返回 `E_LIMIT`。
 

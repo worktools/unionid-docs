@@ -99,7 +99,7 @@ unionid migration abort --db app.redb
 unionid migration rehearse --db app.redb --dir migrations --queries queries --copy rehearsal.redb
 ```
 
-`plan` 不写入；`apply` 尝试完成迁移；format-6 shadow migration 可用 `advance` 在每次已提交 maintenance action 后返回。`abort` 只处理允许回退的 building 状态，不会倒退已 cutover 的 schema。`rehearse` 在私有副本上演练，不把结果写回原数据库；`--copy` 指定一个不存在的路径来保留副本。`--queries <dir>` 在目标 schema 上静态绑定已保存的查询，任何查询失效都以 `E_MIGRATION`（退出码 3）拒绝，`apply` 不会提交任何 migration。
+`plan` 不写入；`apply` 尝试完成迁移；format 6 及之后的 shadow migration 可用 `advance` 在每次已提交 maintenance action 后返回。`abort` 只处理允许回退的 building 状态，不会倒退已 cutover 的 schema。`rehearse` 在私有副本上演练，不把结果写回原数据库；`--copy` 指定一个不存在的路径来保留副本。`--queries <dir>` 在目标 schema 上静态绑定已保存的查询，任何查询失效都以 `E_MIGRATION`（退出码 3）拒绝，`apply` 不会提交任何 migration。
 
 ## 完整性、升级与压缩
 

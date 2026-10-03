@@ -79,6 +79,9 @@ unionid_query::queries! {
     }
 }
 
+use unionid::Engine;
+let mut engine = Engine::open_redb("data/app.redb")?;
+
 let rows = find_pending::find_pending(
     &mut engine,
     find_pending::FindPendingParams { min_priority: 3 },

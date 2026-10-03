@@ -41,7 +41,7 @@ All three share the parser, type checker, executor, and transaction semantics. L
 
 - One machine, one database owner, serialized writes; `ConcurrentEngine` supports up to eight consistent read snapshots.
 - Around 10,000 rows is the comfortable range. 100,000 rows is a tested upper bound, not a routine target.
-- ADTs, indexes, aggregation, stable pagination, and bounded lookup are supported; general flattened joins, windows, and distributed execution are not.
+- ADTs, indexes, aggregation, basic ranking windows, stable pagination, and bounded lookup are supported; general flattened joins, window frames, and distributed execution are not.
 - Users, roles, row permissions, subscriptions, CDC, and application caching remain application responsibilities.
 
 ## Suggested path

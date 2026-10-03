@@ -31,7 +31,7 @@ Immutable checksums form a single migration chain. Never rewrite, reorder, or re
 
 Safe rollout is: verify a restorable backup, inspect status, plan/rehearse, establish a write maintenance window, apply or bounded-advance, reopen/check, then run application smoke tests.
 
-Format-6 large migrations build a shadow generation. `Building` reads the old generation and blocks ordinary writes. `Ready` cuts over atomically; `Reclaimable` only has old logical keys left to delete. Each advance action is durably committed, so restart resumes from maintenance state. Abort applies only to a reversible build, not after cutover. The logical shadow cap is 1 GiB and one delay is at most 60 seconds.
+Large migrations on format 6 and later build a shadow generation. `Building` reads the old generation and blocks ordinary writes. `Ready` cuts over atomically; `Reclaimable` only has old logical keys left to delete. Each advance action is durably committed, so restart resumes from maintenance state. Abort applies only to a reversible build, not after cutover. The logical shadow cap is 1 GiB and one delay is at most 60 seconds.
 
 Generation reclaim does not guarantee a smaller redb file. Physical page reclamation requires offline compact.
 
@@ -39,7 +39,7 @@ Generation reclaim does not guarantee a smaller redb file. Physical page reclama
 
 A full logical backup must be restored to an independent path and verified. Restore never overwrites an active database and creates new database/cursor identity, so old cursors are invalid.
 
-Incremental archive codec 1 consists of a verified baseline, manifest, consecutive immutable segments, and source journal. Init publishes a prepared manifest only after writing and rereading the baseline, then synchronously enables journal and activates the manifest; this explicitly authorizes format 6 → 7. Export publishes a segment, atomically advances the manifest, then trims journal. Defaults are 1000 commits or 64 MiB per segment. Verify reports checksum/sequence gaps and orphan files.
+Incremental archive codec 1 consists of a verified baseline, manifest, consecutive immutable segments, and source journal. Init publishes a prepared manifest only after writing and rereading the baseline, then synchronously enables journal and activates the manifest; this explicitly authorizes entering the journal format (6 → 7, 8 → 9, 10 → 11). Export publishes a segment, atomically advances the manifest, then trims journal. Defaults are 1000 commits or 64 MiB per segment. Verify reports checksum/sequence gaps and orphan files.
 
 Incremental restore requires a nonexistent destination and may select a sequence cutoff. It rejects gaps, checksum mismatch, and wrong lineage. Run full check and application-level row sampling afterward.
 

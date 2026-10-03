@@ -19,4 +19,6 @@ Rust-shaped source syntax is a v0.7 breaking change. Canonical forms use `struct
 
 Protocol v1 supports foundational scalars and ADTs; v2 adds production scalars. Stream protocol is versioned independently.
 
-The binary only reads storage formats named in its release contract. Enabling incremental backup explicitly enters format 7, which older binaries reject. Logical backup/restore is the preferred cross-format and rollback boundary.
+The binary only reads storage formats named in its release contract. v0.13.2 reads storage formats 1–11 and creates format 10 by default; logical backup is format 6 (reads 1–6); protocols are 1/2 and stream 1. Enabling incremental backup explicitly enters the matching journal format (6 → 7, 8 → 9, 10 → 11), which older binaries reject.
+
+`unionid`, `unionid-derive`, and `unionid-query` release together; depend on one exact version such as `=0.13.2` and never mix them. Logical backup/restore is the preferred cross-format and rollback boundary.

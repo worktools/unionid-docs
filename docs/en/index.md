@@ -15,10 +15,10 @@ hero:
 
 features:
   - title: Schemas express business states
-    details: Records, sums, options, lists, tuples, and finite recursion have stable identity, defaults, constraints, and migration semantics.
+    details: Records, sums, options, lists, tuples, typed maps, and finite recursion have stable identity, defaults, constraints, and migration semantics, including partial unique indexes.
     link: /en/language/data-model
   - title: Queries understand ADTs
-    details: Pipelines, exhaustive match, derive, aggregation, composite indexes, stable pagination, and explain share one type system.
+    details: Pipelines, exhaustive match, derive, aggregation, ranking windows, stable pagination, explain, and `expect` business guards share one type system.
     link: /en/language/queries
   - title: Development through production
     details: CLI, Rust, and TCP/HTTP share one Engine with backup, resumable migration, checks, compaction, metrics, and controlled networking.

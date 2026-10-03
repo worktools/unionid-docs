@@ -56,6 +56,8 @@ A table row type must be a record. Primary keys are indexable scalars such as in
 
 A secondary index contains 1–16 field paths; order and direction are part of its identity. The same field tuple cannot be both ordinary and unique. Uniqueness compares the complete typed tuple, including `None`. Creating a constraint scans existing rows; a conflict leaves schema, revision, and indexes unchanged.
 
+`create unique index <table> (<paths>) if <predicate>` declares a partial unique index that constrains only rows where the pure boolean predicate holds, for example `is_some email`, `deleted_at == None`, or `state == Active`. Logical backups and portable schemas carry it losslessly; it needs storage format 10/11 (the default for fresh databases). The planner uses it only when a simple `&&` filter mechanically implies the predicate, and `explain` reports `index_predicate`, `predicate_proven`, and value-free `predicate_rejections`. `fetch_by_key` never treats it as proof of table-wide uniqueness.
+
 The planner can use a continuous equality prefix plus a range on the next component. A remaining continuous sort prefix may be traversed forward or wholly reversed. Predicates after a range, a key gap, or a stage boundary remain residual filters.
 
 ## Values and production scalars
@@ -82,6 +84,10 @@ Records use `field: value`; duplicate, missing, and unknown fields fail. When th
 
 Temporal conversion is explicit through `date_parse`, `timestamp_parse`, and `duration_parse`. Decimal text uses `decimal_parse old P S`; precision/scale changes use `decimal_rescale old P S`, which returns `E_DECIMAL_RANGE` rather than dropping non-zero digits.
 
+## Typed maps
+
+`Map<text, T>` literals are written `map {"key": value}`; the empty map is `map {}`. Keys are text and duplicates are rejected. Comparison, ordering, and persistence use canonical UTF-8 key order regardless of literal order. Query functions are `contains_key`, `get`, `keys`, `values`, `entries`, and `length`, which compose with bounded `any`/`all`. Maps have entry, byte, and depth budgets and need storage format 8 or later (fresh databases use 10). Dynamic field paths, map patterns, merge, keyed in-place update, and keyed secondary indexes are not supported.
+
 ## Finite recursion
 
 ```text
@@ -99,13 +105,14 @@ A recursive type must have at least one finite inhabitant. A sum needs a termina
 
 `$name` is bound to the AST by a prepared Rust call or versioned protocol; it is never text substitution. Missing, extra, and wire-decode failures return `E_PARAM_MISSING`, `E_PARAM_EXTRA`, and `E_PARAM_TYPE`; contextual mismatch returns `E_TYPE`.
 
-Schema, data, and ledger effects in one request share one candidate state. If any statement fails, none are published. Once a migration ledger is non-empty, an ordinary script cannot bypass the migration runner to change schema.
+Schema, data, and ledger effects in one request share one candidate state. If any statement fails, none are published. A DML statement may be followed by `expect affected <op> <n>` (`== != < <= > >=`, nonnegative integer literal); a failed guard returns `E_EXPECTATION`, rolls back the whole script, and reports a one-based `statement_index`. A misplaced guard returns `E_EXPECTATION_CONTEXT` before execution. A script holds at most 4,096 top-level statements. Once a migration ledger is non-empty, an ordinary script cannot bypass the migration runner to change schema.
 
 ## Formatting and input status
 
 ```bash
 unionid fmt --file app.unid
-unionid fmt --check --file app.unid
+unionid fmt --check schema.unid queries/*.unid
+unionid fmt --write schema.unid queries/*.unid
 ```
 
 The parser-backed formatter emits canonical semicolon-free layout, retains precedence parentheses, and is idempotent. The REPL and editors can use the same `complete` / `incomplete` / `invalid` status instead of guessing from blank lines.
